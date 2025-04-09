@@ -8,9 +8,6 @@ struct BudgetListView: View {
         entity: Budget.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Budget.date, ascending: false)]
     ) private var budgets: FetchedResults<Budget>
-    
-    // Track the active budget in the UI state
-    @State private var activeBudget: Budget? = nil
 
     var body: some View {
         NavigationView {
@@ -21,26 +18,29 @@ struct BudgetListView: View {
 
                 ScrollView {
                     ForEach(budgets, id: \.id) { budget in
-                        // Swipe actions for both left and right swipe
-                        BudgetCardView(name: budget.name ?? "Unnamed", month: formattedMonth(budget.date), isActive: budget == activeBudget)
-                            .swipeActions(edge: .trailing) {
-                                // Right swipe - Set as active
+                        NavigationLink(destination: BudgetDetailView(budget: budget)) {
+                            BudgetCardView(
+                                name: budget.name ?? "Unnamed",
+                                month: formattedMonth(budget.date),
+                                isActive: budget.isActive
+                            )
+                            .contextMenu {
+                                // Option to set the budget as active
                                 Button(action: {
                                     setActiveBudget(budget)
                                 }) {
                                     Label("Set Active", systemImage: "checkmark.circle.fill")
                                 }
-                                .tint(.green)
-                            }
-                            .swipeActions(edge: .leading) {
-                                // Left swipe - Delete
+                                
+                                // Option to delete the budget
                                 Button(action: {
                                     deleteBudget(budget)
                                 }) {
                                     Label("Delete", systemImage: "trash.fill")
+                                        .foregroundColor(.red)
                                 }
-                                .tint(.red)
                             }
+                        }
                     }
                 }
 
@@ -74,7 +74,6 @@ struct BudgetListView: View {
         
         // Set the selected budget as active
         budget.isActive = true
-        activeBudget = budget
 
         // Save changes to Core Data
         do {
@@ -99,7 +98,6 @@ struct BudgetListView: View {
     }
 }
 
-
 struct BudgetListView_Previews: PreviewProvider {
     static var previews: some View {
         let context = PersistenceController.shared.container.viewContext
@@ -107,4 +105,3 @@ struct BudgetListView_Previews: PreviewProvider {
             .environment(\.managedObjectContext, context)
     }
 }
-

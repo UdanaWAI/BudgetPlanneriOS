@@ -25,7 +25,7 @@ struct BudgetCardView: View {
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).stroke(Color.blue, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: 12).stroke(Color.gray, lineWidth: 1))
         .padding(.horizontal)
     }
 }
