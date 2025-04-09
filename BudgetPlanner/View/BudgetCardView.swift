@@ -8,6 +8,9 @@ struct BudgetListView: View {
         entity: Budget.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Budget.date, ascending: false)]
     ) private var budgets: FetchedResults<Budget>
+    
+    // Track the active budget in the UI state
+    @State private var activeBudget: Budget? = nil
 
     var body: some View {
         NavigationView {
@@ -18,9 +21,26 @@ struct BudgetListView: View {
 
                 ScrollView {
                     ForEach(budgets, id: \.id) { budget in
-                        NavigationLink(destination: BudgetDetailView(budget: budget)) {
-                            BudgetCardView(name: budget.name ?? "Unnamed", month: formattedMonth(budget.date), isActive: true)
-                        }
+                        // Swipe actions for both left and right swipe
+                        BudgetCardView(name: budget.name ?? "Unnamed", month: formattedMonth(budget.date), isActive: budget == activeBudget)
+                            .swipeActions(edge: .trailing) {
+                                // Right swipe - Set as active
+                                Button(action: {
+                                    setActiveBudget(budget)
+                                }) {
+                                    Label("Set Active", systemImage: "checkmark.circle.fill")
+                                }
+                                .tint(.green)
+                            }
+                            .swipeActions(edge: .leading) {
+                                // Left swipe - Delete
+                                Button(action: {
+                                    deleteBudget(budget)
+                                }) {
+                                    Label("Delete", systemImage: "trash.fill")
+                                }
+                                .tint(.red)
+                            }
                     }
                 }
 
@@ -43,6 +63,39 @@ struct BudgetListView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "LLLL"
         return formatter.string(from: date)
+    }
+
+    // Function to set a budget as active
+    private func setActiveBudget(_ budget: Budget) {
+        // First, set all budgets to inactive
+        for item in budgets {
+            item.isActive = false
+        }
+        
+        // Set the selected budget as active
+        budget.isActive = true
+        activeBudget = budget
+
+        // Save changes to Core Data
+        do {
+            try viewContext.save()
+        } catch {
+            // Handle error
+            print("Error saving active budget: \(error)")
+        }
+    }
+
+    // Function to delete a budget
+    private func deleteBudget(_ budget: Budget) {
+        viewContext.delete(budget)
+
+        // Save changes to Core Data
+        do {
+            try viewContext.save()
+        } catch {
+            // Handle error
+            print("Error deleting budget: \(error)")
+        }
     }
 }
 
