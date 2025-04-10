@@ -1,4 +1,5 @@
 import SwiftUI
+import EventKit
 
 struct CreateBudgetView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -9,7 +10,10 @@ struct CreateBudgetView: View {
     @State private var value: Double = 0.0
     @State private var type: String = "Monthly"
     @State private var date: Date = Date()
+    @State private var isRecurring = false
+    @State private var setReminder = false
 
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -28,7 +32,12 @@ struct CreateBudgetView: View {
                 NumberInputComponent(title: "Value", value: $value)
                 DropdownComponent(label: "Select Budget Type", selectedOption: $type, options: ["Monthly", "Weekly", "Daily"])
                 DatePickerComponent(label: "Select Date", date: $date)
-
+                HStack{
+                    CheckboxView(isChecked: $isRecurring, label: "Set Recurring")
+                    Spacer()
+                    CheckboxView(isChecked: $setReminder, label: "Set Reminder")
+                }.padding()
+                
                 Button(action: createBudget) {
                     Text("Create")
                         .fontWeight(.bold)
@@ -51,9 +60,14 @@ struct CreateBudgetView: View {
         newBudget.value = value
         newBudget.type = type
         newBudget.date = date
-
+        newBudget.isRecurring = isRecurring
+        newBudget.setReminder = setReminder
+        
         do {
             try viewContext.save()
+            if setReminder {
+                addBudgetReminderEvent(budgetName: name, startDate: date, type: type)
+                   }
             presentationMode.wrappedValue.dismiss()
         } catch {
             print("Error saving budget: \(error.localizedDescription)")
@@ -61,17 +75,56 @@ struct CreateBudgetView: View {
     }
 }
 
-struct BudgetDetailView_Previews: PreviewProvider {
+func addBudgetReminderEvent(budgetName: String, startDate: Date, type: String) {
+    let eventStore = EKEventStore()
+
+    eventStore.requestAccess(to: .event) { granted, error in
+        if granted && error == nil {
+            let event = EKEvent(eventStore: eventStore)
+            event.title = "Budget Reminder: \(budgetName)"
+            event.startDate = startDate
+            event.endDate = startDate.addingTimeInterval(60 * 60) // 1-hour duration
+            event.calendar = eventStore.defaultCalendarForNewEvents
+
+            // Set recurrence rule based on budget type
+            var recurrenceFrequency: EKRecurrenceFrequency?
+            switch type.lowercased() {
+            case "daily":
+                recurrenceFrequency = .daily
+            case "weekly":
+                recurrenceFrequency = .weekly
+            case "monthly":
+                recurrenceFrequency = .monthly
+            default:
+                break
+            }
+
+            if let frequency = recurrenceFrequency {
+                let recurrenceRule = EKRecurrenceRule(
+                    recurrenceWith: frequency,
+                    interval: 1,
+                    end: nil
+                )
+                event.recurrenceRules = [recurrenceRule]
+            }
+
+            do {
+                try eventStore.save(event, span: .futureEvents)
+                print("Recurring event added to calendar.")
+            } catch let err {
+                print("Failed to save event: \(err.localizedDescription)")
+            }
+        } else {
+            print("Calendar access denied or error: \(error?.localizedDescription ?? "Unknown")")
+        }
+    }
+}
+
+
+struct CreateBudgetView_Previews: PreviewProvider {
     static var previews: some View {
         let context = PersistenceController.shared.container.viewContext
-        let sample = Budget(context: context)
-        sample.id = UUID()
-        sample.name = "Sample Budget"
-        sample.caption = "A preview budget"
-        sample.value = 300.0
-        sample.type = "Monthly"
-        sample.date = Date()
-
-        return BudgetDetailView(budget: sample)
+        return CreateBudgetView()
+            .environment(\.managedObjectContext, context)
     }
 }

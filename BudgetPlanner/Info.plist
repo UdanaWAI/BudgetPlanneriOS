@@ -2,14 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSCameraUsageDescription</key>
-    <string>We need access to your camera for scanning receipts.</string>
-
+	<key>NSCalendarsUsageDescription</key>
+	<string>We use your calendar to add budget reminders.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera for scanning receipts.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict/>
 	</array>
 </dict>
-
-
 </plist>

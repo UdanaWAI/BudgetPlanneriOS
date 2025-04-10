@@ -26,6 +26,10 @@ struct BudgetDetailView: View {
                     .font(.body)
                 Text("Budget Type: \(budget.type ?? "-")")
                     .font(.body)
+                Divider()
+                CheckboxView(isChecked: .constant(budget.isRecurring), label: "Set Recurring")
+                CheckboxView(isChecked: .constant(budget.setReminder), label: "Set Reminder")
+
             }
             .padding()
             Spacer()
@@ -41,10 +45,18 @@ struct BudgetDetailView: View {
     }
 }
 
-struct CreateBudgetView_Previews: PreviewProvider {
+struct BudgetDetailView_Previews: PreviewProvider {
     static var previews: some View {
         let context = PersistenceController.shared.container.viewContext
-        return CreateBudgetView()
-            .environment(\.managedObjectContext, context)
+        let sample = Budget(context: context)
+        sample.id = UUID()
+        sample.name = "Sample Budget"
+        sample.caption = "A preview budget"
+        sample.value = 300.0
+        sample.type = "Monthly"
+        sample.date = Date()
+
+        return BudgetDetailView(budget: sample)
     }
 }
+
