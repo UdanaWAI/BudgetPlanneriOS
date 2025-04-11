@@ -2,13 +2,12 @@ import SwiftUI
 import VisionKit
 
 struct ReceiptScannerView: View {
-    @State private var totalCost: String = ""  // Automatically updated
-    @State private var scannedItems: String = ""
-    @State private var showScanner = false
+    @State private var totalCost: String = ""      // Automatically updated with only total
+    @State private var showScanner = false         // Controls camera sheet
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            VStack(spacing: 30) {
                 Text("Receipt Scanner")
                     .font(.largeTitle)
                     .fontWeight(.bold)
@@ -19,29 +18,23 @@ struct ReceiptScannerView: View {
                     Text("Scan Receipt")
                         .foregroundColor(.white)
                         .padding()
+                        .frame(maxWidth: .infinity)
                         .background(Color.blue)
-                        .cornerRadius(10)
+                        .cornerRadius(12)
                 }
                 .sheet(isPresented: $showScanner) {
-                    ReceiptScanner(scannedText: $scannedItems, totalAmount: $totalCost)  // Pass bindings
+                    ReceiptScanner(scannedText: .constant(""), totalAmount: $totalCost)
                 }
 
-                Text("Total Cost:")
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Total Cost:")
+                        .font(.headline)
 
-                TextField("Total Cost", text: $totalCost)  // Auto-filled
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                    .disabled(true)  // Read-only
-
-                ScrollView {
-                    Text(scannedItems.isEmpty ? "Scanned items will appear here." : scannedItems)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                    TextField("Total", text: $totalCost)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                         // Make it read-only
                 }
-                .padding()
+                .padding(.horizontal)
 
                 Spacer()
             }

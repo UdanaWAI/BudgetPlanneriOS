@@ -64,11 +64,24 @@ struct ReceiptScanner: UIViewControllerRepresentable {
         }
 
         func extractTotalAmount(from text: String) -> String {
-            let pattern = "(Total|Amount|Grand Total|Balance Due)[:\\s]*\\$?([0-9]+\\.?[0-9]*)"
-            if let match = text.range(of: pattern, options: .regularExpression) {
-                return String(text[match]).replacingOccurrences(of: "Total:", with: "").trimmingCharacters(in: .whitespaces)
+            let pattern = #"(?i)(Total|Amount|Rs.|Grand\s?Total|Balance\s?Due)[\s:\-]*([A-Z]{2,4}[:\s]*)*([0-9,]+\.[0-9]{2})"#
+
+            if let regex = try? NSRegularExpression(pattern: pattern) {
+                let range = NSRange(text.startIndex..., in: text)
+                if let match = regex.firstMatch(in: text, options: [], range: range),
+                   let amountRange = Range(match.range(at: 3), in: text) {
+
+                    let value = text[amountRange]
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    return value
+                }
             }
+
             return "Not Found"
         }
+
+
+
     }
 }
