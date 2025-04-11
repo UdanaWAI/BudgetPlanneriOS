@@ -9,13 +9,16 @@ struct CreateExpenseView: View {
     @State private var amountSpent: Double = 0.0
     @State private var isRecurring: Bool = false
     @State private var selectedBudgetID: UUID?  // Store the UUID of the selected budget
+    @State private var scannedText: String = ""
+    @State private var totalAmount: String = ""
+    @State private var showScanner = false
 
-    var selectedBudget: Budget? // <-- Add this
+    var selectedBudget: Budget?
 
-        @FetchRequest(
-            entity: Budget.entity(),
-            sortDescriptors: [NSSortDescriptor(keyPath: \Budget.name, ascending: true)]
-        ) var budgets: FetchedResults<Budget>
+    @FetchRequest(
+        entity: Budget.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \Budget.name, ascending: true)]
+    ) var budgets: FetchedResults<Budget>
 
     var body: some View {
         ScrollView {
@@ -31,22 +34,35 @@ struct CreateExpenseView: View {
                     .padding()
 
                 TextFieldComponent(title: "Expense Title", text: $title)
+
                 NumberInputComponent(title: "Amount Spent", value: $amountSpent)
-                
+
+                Button(action: {
+                    showScanner = true
+                }) {
+                    Label("Quick Scan Receipt", systemImage: "doc.viewfinder")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.purple.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+
                 // Select Budget Picker
                 Picker("Select Budget", selection: $selectedBudgetID) {
                     ForEach(budgets, id: \.self) { budget in
-                        Text(budget.name!)
+                        Text(budget.name ?? "Unnamed Budget")
                             .tag(budget.id)
                     }
-                } 
+                }
                 .pickerStyle(MenuPickerStyle())
                 .padding()
 
                 HStack {
                     CheckboxView(isChecked: $isRecurring, label: "Is Recurring")
                 }.padding()
-                
+
                 Button(action: createExpense) {
                     Text("Create")
                         .fontWeight(.bold)
@@ -59,10 +75,18 @@ struct CreateExpenseView: View {
                 .padding(.horizontal)
             }
         }
+        .sheet(isPresented: $showScanner) {
+            ReceiptScanner(scannedText: $scannedText, totalAmount: $totalAmount)
+                .onDisappear {
+                    if let amount = Double(totalAmount.replacingOccurrences(of: ",", with: "")) {
+                        amountSpent = amount
+                    }
+                }
+        }
         .onAppear {
             if let selected = selectedBudget {
-                            selectedBudgetID = selected.id
-                        }
+                selectedBudgetID = selected.id
+            }
         }
     }
 
@@ -79,11 +103,10 @@ struct CreateExpenseView: View {
         newExpense.amountSpent = amountSpent
         newExpense.isRecurring = isRecurring
         newExpense.date = Date()
-        newExpense.budget = selectedBudget  // Assign selected Budget object
+        newExpense.budget = selectedBudget
 
         selectedBudget.value = max(0, selectedBudget.value - amountSpent)
 
-        
         do {
             try viewContext.save()
             presentationMode.wrappedValue.dismiss()
@@ -115,7 +138,7 @@ struct CreateExpenseView_Previews: PreviewProvider {
             print("Failed to save preview budget: \(error)")
         }
 
-        return CreateExpenseView()
+        return CreateExpenseView(selectedBudget: mockBudget)
             .environment(\.managedObjectContext, context)
     }
 }
