@@ -10,10 +10,12 @@ struct CreateExpenseView: View {
     @State private var isRecurring: Bool = false
     @State private var selectedBudgetID: UUID?  // Store the UUID of the selected budget
 
-    @FetchRequest(
-        entity: Budget.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \Budget.name, ascending: true)]
-    ) var budgets: FetchedResults<Budget>
+    var selectedBudget: Budget? // <-- Add this
+
+        @FetchRequest(
+            entity: Budget.entity(),
+            sortDescriptors: [NSSortDescriptor(keyPath: \Budget.name, ascending: true)]
+        ) var budgets: FetchedResults<Budget>
 
     var body: some View {
         ScrollView {
@@ -34,7 +36,7 @@ struct CreateExpenseView: View {
                 // Select Budget Picker
                 Picker("Select Budget", selection: $selectedBudgetID) {
                     ForEach(budgets, id: \.self) { budget in
-                        Text(budget.name)
+                        Text(budget.name!)
                             .tag(budget.id)
                     }
                 } 
@@ -58,9 +60,9 @@ struct CreateExpenseView: View {
             }
         }
         .onAppear {
-            if budgets.isEmpty {
-                print("No budgets available.")
-            }
+            if let selected = selectedBudget {
+                            selectedBudgetID = selected.id
+                        }
         }
     }
 
@@ -79,11 +81,41 @@ struct CreateExpenseView: View {
         newExpense.date = Date()
         newExpense.budget = selectedBudget  // Assign selected Budget object
 
+        selectedBudget.value = max(0, selectedBudget.value - amountSpent)
+
+        
         do {
             try viewContext.save()
             presentationMode.wrappedValue.dismiss()
         } catch {
             print("Error saving expense: \(error.localizedDescription)")
         }
+    }
+}
+
+struct CreateExpenseView_Previews: PreviewProvider {
+    static var previews: some View {
+        let context = PersistenceController.preview.container.viewContext
+
+        // Insert mock budget data to show in Picker preview
+        let mockBudget = Budget(context: context)
+        mockBudget.id = UUID()
+        mockBudget.name = "Mock Budget"
+        mockBudget.value = 1000
+        mockBudget.type = "Monthly"
+        mockBudget.date = Date()
+        mockBudget.isRecurring = false
+        mockBudget.setReminder = false
+        mockBudget.caption = "Preview Caption"
+        mockBudget.isActive = true
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save preview budget: \(error)")
+        }
+
+        return CreateExpenseView()
+            .environment(\.managedObjectContext, context)
     }
 }

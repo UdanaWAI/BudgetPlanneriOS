@@ -1,7 +1,10 @@
 import SwiftUI
 
 struct BudgetDetailView: View {
-    var budget: Budget
+    @Environment(\.managedObjectContext) private var viewContext
+    @ObservedObject var budget: Budget
+
+    @State private var showCreateExpense = false
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -30,19 +33,34 @@ struct BudgetDetailView: View {
                 CheckboxView(isChecked: .constant(budget.isRecurring), label: "Set Recurring")
                 CheckboxView(isChecked: .constant(budget.setReminder), label: "Set Reminder")
 
+                Button(action: {
+                    showCreateExpense = true
+                }) {
+                    Label("Add Expense", systemImage: "plus")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.purple)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.top)
+                }
             }
             .padding()
             Spacer()
+        }
+        .sheet(isPresented: $showCreateExpense) {
+            CreateExpenseView(selectedBudget: budget)
+                .environment(\.managedObjectContext, viewContext)
         }
         .navigationTitle("Personal Budget")
     }
 
     func formattedMonth(_ date: Date?) -> String {
-        guard let date = date else { return "" }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "LLLL yyyy"
-        return formatter.string(from: date)
-    }
+            guard let date = date else { return "" }
+            let formatter = DateFormatter()
+            formatter.dateFormat = "LLLL yyyy"
+            return formatter.string(from: date)
+        }
 }
 
 struct BudgetDetailView_Previews: PreviewProvider {
