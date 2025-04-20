@@ -3,6 +3,7 @@ import CoreData
 
 struct BudgetListView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @StateObject private var viewModel = BudgetViewModel()
 
     @FetchRequest(
         entity: Budget.entity(),
@@ -17,7 +18,7 @@ struct BudgetListView: View {
                     .padding(.top)
 
                 ScrollView {
-                    ForEach(budgets, id: \.id) { budget in
+                    ForEach(viewModel.budgets, id: \.id) { budget in
                         NavigationLink(destination: BudgetDetailView(budget: budget)) {
                             BudgetCardView(
                                 name: budget.name ?? "Unnamed",
@@ -55,6 +56,10 @@ struct BudgetListView: View {
                 }
                 .padding()
             }
+            .onAppear {
+                // Load budgets from Firebase (example userId: "sampleUserId")
+                viewModel.fetchBudgets(for: "sampleUserId")
+            }
         }
     }
 
@@ -66,15 +71,19 @@ struct BudgetListView: View {
     }
 
     // Function to set a budget as active
-    private func setActiveBudget(_ budget: Budget) {
-        // First, set all budgets to inactive
+    private func setActiveBudget(_ budget: BudgetModel) {
+        viewModel.setActive(budget)
+        
+        // Update Core Data after setting active
         for item in budgets {
             item.isActive = false
         }
         
         // Set the selected budget as active
-        budget.isActive = true
-
+        if let selectedBudget = budgets.first(where: { $0.id == budget.id }) {
+            selectedBudget.isActive = true
+        }
+        
         // Save changes to Core Data
         do {
             try viewContext.save()
@@ -85,15 +94,17 @@ struct BudgetListView: View {
     }
 
     // Function to delete a budget
-    private func deleteBudget(_ budget: Budget) {
-        viewContext.delete(budget)
+    private func deleteBudget(_ budget: BudgetModel) {
+        viewModel.deleteBudget(budget)
 
-        // Save changes to Core Data
-        do {
-            try viewContext.save()
-        } catch {
-            // Handle error
-            print("Error deleting budget: \(error)")
+        // Remove from Core Data
+        if let localBudget = budgets.first(where: { $0.id == budget.id }) {
+            viewContext.delete(localBudget)
+            do {
+                try viewContext.save()
+            } catch {
+                print("Error deleting budget: \(error)")
+            }
         }
     }
 }
