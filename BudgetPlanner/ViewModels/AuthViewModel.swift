@@ -2,6 +2,8 @@ import Foundation
 import FirebaseAuth
 import FirebaseFirestore
 import Combine
+import LocalAuthentication
+
 
 class AuthViewModel: ObservableObject {
     @Published var user: AppUser?
@@ -77,4 +79,33 @@ class AuthViewModel: ObservableObject {
             self.user = data
         }
     }
+    
+    func biometricLogin(completion: @escaping (String?) -> Void) {
+        let context = LAContext()
+        var error: NSError?
+
+        // Check if biometrics are available
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            let reason = "Log in with Face ID / Touch ID"
+
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authError in
+                DispatchQueue.main.async {
+                    if success {
+                        // Proceed with login using saved credentials or restore user session
+                        if let currentUser = Auth.auth().currentUser {
+                            self.fetchUser(uid: currentUser.uid)
+                            completion(nil)
+                        } else {
+                            completion("No user session available.")
+                        }
+                    } else {
+                        completion(authError?.localizedDescription ?? "Authentication failed.")
+                    }
+                }
+            }
+        } else {
+            completion("Biometric authentication not available.")
+        }
+    }
+
 }

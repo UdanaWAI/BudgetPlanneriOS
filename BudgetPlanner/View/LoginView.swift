@@ -35,6 +35,14 @@ struct LoginView: View {
                 }
             }
 
+            PrimaryButton(title: "Login with Face ID / Touch ID") {
+                authVM.biometricLogin { error in
+                    if let error = error {
+                        print("Biometric login error:", error)
+                    }
+                }
+            }
+
             Spacer()
 
             HStack {
