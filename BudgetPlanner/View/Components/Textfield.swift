@@ -23,7 +23,6 @@ struct TextBox: View {
 
 
 
-// MARK: - Preview
 struct Textfields: View {
     @State private var textValue = ""
     @State private var selectedBudget = "Monthly"

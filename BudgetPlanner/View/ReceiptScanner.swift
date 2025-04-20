@@ -4,7 +4,7 @@ import Vision
 
 struct ReceiptScanner: UIViewControllerRepresentable {
     @Binding var scannedText: String
-    @Binding var totalAmount: String  // New Binding for total cost
+    @Binding var totalAmount: String
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
@@ -31,7 +31,7 @@ struct ReceiptScanner: UIViewControllerRepresentable {
         }
 
         func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
-            var scannedText = ""
+          //  var scannedText = ""
             for pageIndex in 0..<scan.pageCount {
                 let scannedImage = scan.imageOfPage(at: pageIndex)
                 recognizeText(from: scannedImage)
