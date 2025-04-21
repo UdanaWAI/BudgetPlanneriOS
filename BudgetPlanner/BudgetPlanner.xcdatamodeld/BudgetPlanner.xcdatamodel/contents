@@ -3,12 +3,14 @@
     <entity name="Budget" representedClassName="Budget" syncable="YES" codeGenerationType="class">
         <attribute name="caption" optional="YES" attributeType="String"/>
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="firebaseID" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isActive" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="isRecurring" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="setReminder" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="userId" optional="YES" attributeType="String"/>
         <attribute name="value" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <relationship name="expense" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Expense" inverseName="budget" inverseEntity="Expense"/>
     </entity>

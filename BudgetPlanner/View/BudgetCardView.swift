@@ -4,6 +4,7 @@ import CoreData
 struct BudgetListView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var viewModel = BudgetViewModel()
+    @EnvironmentObject var authVM: AuthViewModel
 
     @FetchRequest(
         entity: Budget.entity(),
@@ -18,7 +19,7 @@ struct BudgetListView: View {
                     .padding(.top)
 
                 ScrollView {
-                    ForEach(viewModel.budgets, id: \.id) { budget in
+                    ForEach(budgets, id: \.id) { budget in
                         NavigationLink(destination: BudgetDetailView(budget: budget)) {
                             BudgetCardView(
                                 name: budget.name ?? "Unnamed",
@@ -26,22 +27,20 @@ struct BudgetListView: View {
                                 isActive: budget.isActive
                             )
                             .contextMenu {
-                                // Option to set the budget as active
                                 Button(action: {
                                     setActiveBudget(budget)
                                 }) {
                                     Label("Set Active", systemImage: "checkmark.circle.fill")
                                 }
-                                
-                                // Option to delete the budget
-                                Button(action: {
+
+                                Button(role: .destructive) {
                                     deleteBudget(budget)
-                                }) {
+                                } label: {
                                     Label("Delete", systemImage: "trash.fill")
-                                        .foregroundColor(.red)
                                 }
                             }
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
 
@@ -56,9 +55,11 @@ struct BudgetListView: View {
                 }
                 .padding()
             }
+            .padding(.horizontal)
             .onAppear {
-                // Load budgets from Firebase (example userId: "sampleUserId")
-                viewModel.fetchBudgets(for: "sampleUserId")
+                if let userId = authVM.user?.id {
+                    viewModel.fetchBudgets(for: userId)
+                }
             }
         }
     }
@@ -70,41 +71,66 @@ struct BudgetListView: View {
         return formatter.string(from: date)
     }
 
-    // Function to set a budget as active
-    private func setActiveBudget(_ budget: BudgetModel) {
-        viewModel.setActive(budget)
-        
-        // Update Core Data after setting active
-        for item in budgets {
-            item.isActive = false
+    // MARK: - Set Budget as Active
+    private func setActiveBudget(_ selected: Budget) {
+        // 1. Update Core Data to reflect the active state
+        for budget in budgets {
+            budget.isActive = (budget.id == selected.id)
         }
-        
-        // Set the selected budget as active
-        if let selectedBudget = budgets.first(where: { $0.id == budget.id }) {
-            selectedBudget.isActive = true
-        }
-        
-        // Save changes to Core Data
+
         do {
             try viewContext.save()
         } catch {
-            // Handle error
-            print("Error saving active budget: \(error)")
+            print("Error saving active budget: \(error.localizedDescription)")
         }
+
+        // 2. Push change to Firebase
+        let model = BudgetModel(
+            id: selected.firebaseID ?? UUID().uuidString,
+            name: selected.name ?? "",
+            caption: selected.caption ?? "",
+            value: selected.value,
+            type: selected.type ?? "",
+            date: selected.date ?? Date(),
+            isRecurring: selected.isRecurring,
+            setReminder: selected.setReminder,
+            isActive: true,
+            userId: selected.userId ?? ""
+        )
+
+        viewModel.setActive(model)
     }
 
-    // Function to delete a budget
-    private func deleteBudget(_ budget: BudgetModel) {
-        viewModel.deleteBudget(budget)
+    // MARK: - Delete Budget
+    private func deleteBudget(_ budget: Budget) {
+        guard let firebaseID = budget.firebaseID,
+              let userId = budget.userId else {
+            print("Missing Firebase ID or user ID")
+            return
+        }
 
-        // Remove from Core Data
-        if let localBudget = budgets.first(where: { $0.id == budget.id }) {
-            viewContext.delete(localBudget)
-            do {
-                try viewContext.save()
-            } catch {
-                print("Error deleting budget: \(error)")
-            }
+        // 1. Delete from Firebase
+        let model = BudgetModel(
+            id: firebaseID,
+            name: budget.name ?? "",
+            caption: budget.caption ?? "",
+            value: budget.value,
+            type: budget.type ?? "",
+            date: budget.date ?? Date(),
+            isRecurring: budget.isRecurring,
+            setReminder: budget.setReminder,
+            isActive: budget.isActive,
+            userId: userId
+        )
+
+        viewModel.deleteBudget(model)
+
+        // 2. Delete from Core Data
+        viewContext.delete(budget)
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error deleting budget locally: \(error.localizedDescription)")
         }
     }
 }
@@ -112,7 +138,11 @@ struct BudgetListView: View {
 struct BudgetListView_Previews: PreviewProvider {
     static var previews: some View {
         let context = PersistenceController.shared.container.viewContext
+        let authVM = AuthViewModel()
+        authVM.user = AppUser(id: "preview-user", username: "Tester", mobile: "0000", email: "tester@example.com")
+
         return BudgetListView()
             .environment(\.managedObjectContext, context)
+            .environmentObject(authVM)
     }
 }

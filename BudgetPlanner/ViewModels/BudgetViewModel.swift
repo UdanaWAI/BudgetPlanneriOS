@@ -1,6 +1,5 @@
 import Foundation
 import FirebaseFirestore
-//import FirebaseFirestoreSwift
 import CoreData
 
 class BudgetViewModel: ObservableObject {
@@ -16,25 +15,19 @@ class BudgetViewModel: ObservableObject {
             return
         }
 
-        do {
-            // Save to Firebase
-            try db.collection("users")
-                .document(budget.userId)
-                .collection("budgets")
-                .document(budget.id)
-                .setData(from: budget) { error in
-                    if let error = error {
-                        completion(error)
-                        return
-                    }
-
-                    // Save to Core Data
-                    self.saveToCoreData(budget)
-                    completion(nil)
+        db.collection("users")
+            .document(budget.userId)
+            .collection("budgets")
+            .document(budget.id)
+            .setData(budget.toDict()) { error in
+                if let error = error {
+                    completion(error)
+                    return
                 }
-        } catch {
-            completion(error)
-        }
+
+                self.saveToCoreData(budget)
+                completion(nil)
+            }
     }
 
     // MARK: - Fetch Budgets
@@ -51,43 +44,42 @@ class BudgetViewModel: ObservableObject {
 
                 guard let documents = snapshot?.documents else { return }
 
-                self.budgets = documents.compactMap { doc in
-                    try? doc.data(as: BudgetModel.self)
+                let newBudgets: [BudgetModel] = documents.compactMap { doc in
+                    try? BudgetModel(from: doc.data())
                 }
 
-                // Optionally sync to Core Data
-                self.budgets.forEach { self.saveToCoreData($0) }
+                DispatchQueue.main.async {
+                    self.budgets = newBudgets
+                    newBudgets.forEach { self.saveToCoreData($0) }
+                }
             }
     }
 
     // MARK: - Set Active Budget
     func setActive(_ selected: BudgetModel) {
-        // Update the local array
-        budgets = budgets.map { budget in
-            var updated = budget
-            updated.isActive = (updated.id == selected.id)
-            return updated
-        }
-
         Task {
             do {
-                // Set all to inactive
-                for budget in budgets where budget.id != selected.id {
+                for budget in budgets {
+                    let isSelected = budget.id == selected.id
                     try await db.collection("users")
                         .document(budget.userId)
                         .collection("budgets")
                         .document(budget.id)
-                        .updateData(["isActive": false])
+                        .updateData(["isActive": isSelected])
+
+                    var updated = budget
+                    updated.isActive = isSelected
+                    saveToCoreData(updated)
                 }
 
-                // Set selected to active
-                try await db.collection("users")
-                    .document(selected.userId)
-                    .collection("budgets")
-                    .document(selected.id)
-                    .updateData(["isActive": true])
+                DispatchQueue.main.async {
+                    self.budgets = self.budgets.map {
+                        var mutable = $0
+                        mutable.isActive = ($0.id == selected.id)
+                        return mutable
+                    }
+                }
 
-                try saveToCoreData(selected)
             } catch {
                 print("Error setting active budget: \(error)")
             }
@@ -117,22 +109,21 @@ class BudgetViewModel: ObservableObject {
 
     // MARK: - Core Data Helpers
     private func saveToCoreData(_ model: BudgetModel) {
-        let fetchRequest: NSFetchRequest<Budget> = Budget.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", model.id)
+        let request: NSFetchRequest<Budget> = Budget.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", model.id)
 
         do {
-            let results = try context.fetch(fetchRequest)
-            let budget = results.first ?? Budget(context: context)
+            let result = try context.fetch(request).first ?? Budget(context: context)
 
-            budget.id = UUID(uuidString: model.id) ?? UUID()
-            budget.name = model.name
-            budget.caption = model.caption
-            budget.value = model.value
-            budget.type = model.type
-            budget.date = model.date
-            budget.isRecurring = model.isRecurring
-            budget.setReminder = model.setReminder
-            budget.isActive = model.isActive
+            result.id = UUID(uuidString: model.id) ?? UUID()
+            result.name = model.name
+            result.caption = model.caption
+            result.value = model.value
+            result.type = model.type
+            result.date = model.date
+            result.isRecurring = model.isRecurring
+            result.setReminder = model.setReminder
+            result.isActive = model.isActive
 
             try context.save()
         } catch {

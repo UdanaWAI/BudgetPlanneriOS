@@ -1,22 +1,15 @@
-//
-//  Persistence.swift
-//  BudgetPlanner
-//
-//  Created by Udana 004 on 2025-03-23.
-//
-
 import CoreData
 
 struct PersistenceController {
     static let shared = PersistenceController()
 
-    // Preview context for SwiftUI previews
+    // MARK: - Preview Support for SwiftUI Previews
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
-        
-        // Add some mock Budget data for preview/testing
-        for index in 0..<5 {
+
+        // Add mock budgets for preview/testing
+        for index in 0..<3 {
             let budget = Budget(context: viewContext)
             budget.id = UUID()
             budget.name = "Mock Budget \(index + 1)"
@@ -24,6 +17,8 @@ struct PersistenceController {
             budget.value = Double(index + 1) * 100
             budget.type = "Monthly"
             budget.date = Date()
+            budget.setReminder = false
+            budget.isRecurring = false
         }
 
         do {
@@ -36,20 +31,18 @@ struct PersistenceController {
         return result
     }()
 
-
-    
+    // MARK: - Core Data Stack
     let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "BudgetPlanner") // Must match your .xcdatamodeld file name
+        container = NSPersistentContainer(name: "BudgetPlanner") // Match your .xcdatamodeld file name
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         }
 
         container.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
-                // Handle the error properly in a real app (logging, fallback, user notification, etc.)
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+                fatalError("Unresolved Core Data error \(error), \(error.userInfo)")
             }
         }
 

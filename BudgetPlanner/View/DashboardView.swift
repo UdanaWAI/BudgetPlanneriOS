@@ -1,33 +1,30 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @EnvironmentObject var authVM: AuthViewModel
-
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            if let user = authVM.user {
-                Text("Welcome, \(user.username) 👋")
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Welcome to Your Dashboard")
                     .font(.title)
-                    .fontWeight(.semibold)
-            } else {
-                Text("Loading user...")
-            }
+                    .padding()
 
-            PrimaryButton(title: "Log Out") {
-                authVM.logout()
-            }
+                // Navigation to Budget List
+                NavigationLink(destination: BudgetListView()) {
+                    HStack {
+                        Image(systemName: "list.bullet.rectangle")
+                        Text("Manage Budgets")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(12)
+                }
 
-            Spacer()
+                // Add other dashboard buttons here
+            }
+            .padding()
+            .navigationTitle("Dashboard")
         }
-        .padding()
-    }
-}
-
-struct DashboardView_Previews: PreviewProvider {
-    static var previews: some View {
-        DashboardView()
-            .environmentObject(AuthViewModel())
     }
 }
