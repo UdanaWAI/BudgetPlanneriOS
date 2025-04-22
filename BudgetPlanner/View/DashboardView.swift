@@ -1,30 +1,49 @@
 import SwiftUI
 
 struct DashboardView: View {
+    @EnvironmentObject var authVM: AuthViewModel
+    @Environment(\.managedObjectContext) private var viewContext
+
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text("Welcome to Your Dashboard")
-                    .font(.title)
-                    .padding()
+            VStack(spacing: 24) {
+                Spacer()
 
-                // Navigation to Budget List
-                NavigationLink(destination: BudgetListView()) {
-                    HStack {
-                        Image(systemName: "list.bullet.rectangle")
-                        Text("Manage Budgets")
-                    }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(12)
+                // Check if user is authenticated and display username
+                if let user = authVM.user {
+                    Text("Welcome, \(user.username) 👋")
+                        .font(.title)
+                        .fontWeight(.semibold)
+                } else {
+                    // This will display if the user is not loaded
+                    Text("Loading user...")
+                        .font(.title)
+                        .foregroundColor(.gray)
                 }
 
-                // Add other dashboard buttons here
+                // Navigation to Budget List
+                NavigationButton(title: "View Budget", foregroundColor: .white, backgroundColor: .blue, destination: BudgetListView())
+
+                // Logout Button
+                PrimaryButton(title: "Log Out") {
+                    authVM.logout()
+                }
+
+                Spacer()
             }
             .padding()
-            .navigationTitle("Dashboard")
+            .navigationBarTitle("Dashboard", displayMode: .inline)
         }
+    }
+}
+
+struct DashboardView_Previews: PreviewProvider {
+    static var previews: some View {
+        let authVM = AuthViewModel()
+        authVM.user = AppUser(id: "sampleUser", username: "Demo", mobile: "123456", email: "demo@example.com")
+
+        return DashboardView()
+            .environmentObject(authVM)
+            .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
     }
 }
