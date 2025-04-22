@@ -1,12 +1,10 @@
 import Foundation
 import FirebaseFirestore
-import CoreData
 
 class BudgetViewModel: ObservableObject {
     @Published var budgets: [BudgetModel] = []
 
     private let db = Firestore.firestore()
-    private let context = PersistenceController.shared.container.viewContext
 
     // MARK: - Save Budget
     func saveBudget(_ budget: BudgetModel, completion: @escaping (Error?) -> Void) {
@@ -20,13 +18,7 @@ class BudgetViewModel: ObservableObject {
             .collection("budgets")
             .document(budget.id)
             .setData(budget.toDict()) { error in
-                if let error = error {
-                    completion(error)
-                    return
-                }
-
-                self.saveToCoreData(budget)
-                completion(nil)
+                completion(error)
             }
     }
 
@@ -50,7 +42,6 @@ class BudgetViewModel: ObservableObject {
 
                 DispatchQueue.main.async {
                     self.budgets = newBudgets
-                    newBudgets.forEach { self.saveToCoreData($0) }
                 }
             }
     }
@@ -66,10 +57,6 @@ class BudgetViewModel: ObservableObject {
                         .collection("budgets")
                         .document(budget.id)
                         .updateData(["isActive": isSelected])
-
-                    var updated = budget
-                    updated.isActive = isSelected
-                    saveToCoreData(updated)
                 }
 
                 DispatchQueue.main.async {
@@ -96,48 +83,12 @@ class BudgetViewModel: ObservableObject {
                     .document(budget.id)
                     .delete()
 
-                try deleteFromCoreData(budget.id)
-
                 DispatchQueue.main.async {
                     self.budgets.removeAll { $0.id == budget.id }
                 }
             } catch {
                 print("Failed to delete budget: \(error)")
             }
-        }
-    }
-
-    // MARK: - Core Data Helpers
-    private func saveToCoreData(_ model: BudgetModel) {
-        let request: NSFetchRequest<Budget> = Budget.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", model.id)
-
-        do {
-            let result = try context.fetch(request).first ?? Budget(context: context)
-
-            result.id = UUID(uuidString: model.id) ?? UUID()
-            result.name = model.name
-            result.caption = model.caption
-            result.value = model.value
-            result.type = model.type
-            result.date = model.date
-            result.isRecurring = model.isRecurring
-            result.setReminder = model.setReminder
-            result.isActive = model.isActive
-
-            try context.save()
-        } catch {
-            print("Error saving to Core Data: \(error)")
-        }
-    }
-
-    private func deleteFromCoreData(_ id: String) throws {
-        let request: NSFetchRequest<Budget> = Budget.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id)
-
-        if let result = try context.fetch(request).first {
-            context.delete(result)
-            try context.save()
         }
     }
 }

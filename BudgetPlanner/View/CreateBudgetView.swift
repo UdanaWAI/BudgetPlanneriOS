@@ -1,10 +1,8 @@
 import SwiftUI
 import EventKit
 import FirebaseFirestore
-//import FirebaseFirestoreSwift
 
 struct CreateBudgetView: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var authVM: AuthViewModel
 
@@ -85,10 +83,8 @@ struct CreateBudgetView: View {
         isLoading = true
         errorMessage = nil
 
-        // Generate a unique UUID for the budget's ID
         let budgetID = UUID().uuidString
 
-        // Manually convert the BudgetModel to a dictionary
         let budgetDict: [String: Any] = [
             "id": budgetID,
             "userId": userId,
@@ -98,87 +94,58 @@ struct CreateBudgetView: View {
             "type": type,
             "date": date,
             "isRecurring": isRecurring,
-            "setReminder": setReminder
+            "setReminder": setReminder,
+            "isActive": false
         ]
 
-        db.collection("users").document(userId).collection("budgets").document(budgetID).setData(budgetDict) { error in
-            isLoading = false
-            if let error = error {
-                self.errorMessage = "Failed to save to Firebase: \(error.localizedDescription)"
-                return
+        db.collection("users")
+            .document(userId)
+            .collection("budgets")
+            .document(budgetID)
+            .setData(budgetDict) { error in
+                isLoading = false
+
+                if let error = error {
+                    self.errorMessage = "Failed to save to Firebase: \(error.localizedDescription)"
+                    return
+                }
+
+                if setReminder {
+                    addBudgetReminderEvent(budgetName: name, startDate: date, type: type)
+                }
+
+                presentationMode.wrappedValue.dismiss()
             }
-
-            // Save to Core Data after Firebase is successful
-            saveToCoreData(firebaseID: budgetID)
-
-            if setReminder {
-                addBudgetReminderEvent(budgetName: name, startDate: date, type: type)
-            }
-
-            presentationMode.wrappedValue.dismiss()
-        }
-    }
-
-
-    func saveToCoreData(firebaseID: String) {
-        let localBudget = Budget(context: viewContext)
-        localBudget.id = UUID()  // Store a UUID for Core Data
-        localBudget.name = name
-        localBudget.caption = caption
-        localBudget.value = value
-        localBudget.type = type
-        localBudget.date = date
-        localBudget.isRecurring = isRecurring
-        localBudget.setReminder = setReminder
-        localBudget.firebaseID = firebaseID  // Store Firebase document ID
-        localBudget.userId = authVM.user?.id
-
-        do {
-            try viewContext.save()
-        } catch {
-            print("Failed to save to Core Data: \(error.localizedDescription)")
-        }
     }
 }
 
 func addBudgetReminderEvent(budgetName: String, startDate: Date, type: String) {
     let eventStore = EKEventStore()
-
     eventStore.requestAccess(to: .event) { granted, error in
         if granted && error == nil {
             let event = EKEvent(eventStore: eventStore)
             event.title = "Budget Reminder: \(budgetName)"
             event.startDate = startDate
-            event.endDate = startDate.addingTimeInterval(60 * 60) // 1-hour duration
+            event.endDate = startDate.addingTimeInterval(60 * 60)
             event.calendar = eventStore.defaultCalendarForNewEvents
 
-            // Set recurrence rule based on budget type
             var recurrenceFrequency: EKRecurrenceFrequency?
             switch type.lowercased() {
-            case "daily":
-                recurrenceFrequency = .daily
-            case "weekly":
-                recurrenceFrequency = .weekly
-            case "monthly":
-                recurrenceFrequency = .monthly
-            default:
-                break
+            case "daily": recurrenceFrequency = .daily
+            case "weekly": recurrenceFrequency = .weekly
+            case "monthly": recurrenceFrequency = .monthly
+            default: break
             }
 
             if let frequency = recurrenceFrequency {
-                let recurrenceRule = EKRecurrenceRule(
-                    recurrenceWith: frequency,
-                    interval: 1,
-                    end: nil
-                )
-                event.recurrenceRules = [recurrenceRule]
+                event.recurrenceRules = [EKRecurrenceRule(recurrenceWith: frequency, interval: 1, end: nil)]
             }
 
             do {
                 try eventStore.save(event, span: .futureEvents)
-                print("Recurring event added to calendar.")
-            } catch let err {
-                print("Failed to save event: \(err.localizedDescription)")
+                print("Event added to calendar")
+            } catch {
+                print("Calendar save error: \(error.localizedDescription)")
             }
         } else {
             print("Calendar access denied or error: \(error?.localizedDescription ?? "Unknown")")
@@ -188,14 +155,10 @@ func addBudgetReminderEvent(budgetName: String, startDate: Date, type: String) {
 
 struct CreateBudgetView_Previews: PreviewProvider {
     static var previews: some View {
-        let context = PersistenceController.preview.container.viewContext
-        
-        // Dummy AuthViewModel for preview with mock user
         let authVM = AuthViewModel()
         authVM.user = AppUser(id: "test-id", username: "Test User", mobile: "123456", email: "test@example.com")
-        
+
         return CreateBudgetView()
-            .environment(\.managedObjectContext, context)
             .environmentObject(authVM)
     }
 }

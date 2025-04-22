@@ -1,7 +1,7 @@
 import Foundation
 import FirebaseFirestore
 
-class BudgetModel: Identifiable, ObservableObject {
+class BudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
     @Published var id: String
     @Published var name: String
     @Published var caption: String
@@ -80,4 +80,13 @@ class BudgetModel: Identifiable, ObservableObject {
             userId: userId
         )
     }
+
+        static func == (lhs: BudgetModel, rhs: BudgetModel) -> Bool {
+            return lhs.id == rhs.id
+        }
+
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+        }
 }
