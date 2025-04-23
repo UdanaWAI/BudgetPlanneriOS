@@ -1,16 +1,16 @@
 import SwiftUI
 
 struct ExpenseCardView: View {
-    let expense: Expense
+    let expense: ExpenseModel
     let budgetValue: Double
 
     var progress: Double {
         guard budgetValue > 0 else { return 0 }
-        return min(expense.amountSpent / budgetValue, 1.0)
+        return min(expense.amount / budgetValue, 1.0)
     }
 
     var remaining: Double {
-        max(0, budgetValue - expense.amountSpent)
+        max(0, budgetValue - expense.amount)
     }
 
     var body: some View {
@@ -25,9 +25,9 @@ struct ExpenseCardView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading) {
-                    Text(expense.title!)
+                    Text(expense.name)
                         .font(.headline)
-                    Text("Spent: $\(expense.amountSpent, specifier: "%.2f")")
+                    Text("Spent: $\(expense.amount, specifier: "%.2f")")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }

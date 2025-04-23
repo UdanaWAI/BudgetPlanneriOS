@@ -3,6 +3,12 @@ import SwiftUI
 struct BudgetDetailView: View {
     let budget: BudgetModel
     @State private var showCreateExpense = false
+    @StateObject private var expenseVM = ExpenseViewModel()
+
+    // Computed property to filter expenses related to the current budget
+    var filteredExpenses: [ExpenseModel] {
+        expenseVM.expenses.filter { $0.budgetID == budget.id }
+    }
 
     var body: some View {
         ScrollView {
@@ -50,25 +56,38 @@ struct BudgetDetailView: View {
                             .cornerRadius(10)
                             .padding(.top)
                     }
-                    .disabled(true) // Disable until expense support is added
                 }
                 .padding(.horizontal)
 
-                // MARK: - Expense Cards Section (not yet implemented)
+                // MARK: - Expense Cards Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Expenses")
                         .font(.headline)
                         .padding(.horizontal)
 
-                    Text("Expenses will appear here once added.")
-                        .foregroundColor(.gray)
-                        .padding(.horizontal)
+                    if filteredExpenses.isEmpty {
+                        Text("No expenses yet.")
+                            .foregroundColor(.gray)
+                            .padding(.horizontal)
+                    } else {
+                        ForEach(filteredExpenses) { expense in
+                            ExpenseCardView(expense: expense, budgetValue: budget.value)
+                                .padding(.horizontal)
+                        }
+                    }
                 }
-
             }
             .padding(.top)
         }
         .navigationTitle("Personal Budget")
+        .onAppear {
+            expenseVM.fetchExpenses(for: budget.id)
+        }
+        .sheet(isPresented: $showCreateExpense) {
+            CreateExpenseView(budget: budget) {
+                expenseVM.fetchExpenses(for: budget.id)
+            }
+        }
     }
 
     func formattedMonth(_ date: Date) -> String {
@@ -77,4 +96,3 @@ struct BudgetDetailView: View {
         return formatter.string(from: date)
     }
 }
-

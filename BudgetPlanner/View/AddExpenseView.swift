@@ -1,144 +1,94 @@
 import SwiftUI
-import CoreData
+import FirebaseFirestore
 
 struct CreateExpenseView: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.presentationMode) var presentationMode
 
-    @State private var title: String = ""
-    @State private var amountSpent: Double = 0.0
-    @State private var isRecurring: Bool = false
-    @State private var selectedBudgetID: UUID?  // Store the UUID of the selected budget
-    @State private var scannedText: String = ""
-    @State private var totalAmount: String = ""
-    @State private var showScanner = false
+    let budget: BudgetModel
+    var onExpenseAdded: (() -> Void)? = nil
 
-    var selectedBudget: Budget?
-
-    @FetchRequest(
-        entity: Budget.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \Budget.name, ascending: true)]
-    ) var budgets: FetchedResults<Budget>
+    @State private var name: String = ""
+    @State private var amount: String = ""
+    @State private var date: Date = Date()
+    @State private var errorMessage: String = ""
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                Text("Create Expense")
-                    .font(.title2)
-                    .padding(.top)
+        NavigationView {
+            Form {
+                Section(header: Text("Expense Details")) {
+                    TextField("Title", text: $name)
+                    TextField("Amount", text: $amount)
+                        .keyboardType(.decimalPad)
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
+                }
 
-                Image(systemName: "creditcard.fill")
-                    .resizable()
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.purple)
-                    .padding()
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                }
 
-                TextFieldComponent(title: "Expense Title", text: $title)
-
-                NumberInputComponent(title: "Amount Spent", value: $amountSpent)
-
-                Button(action: {
-                    showScanner = true
-                }) {
-                    Label("Quick Scan Receipt", systemImage: "doc.viewfinder")
+                Button(action: addExpense) {
+                    Text("Add Expense")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.purple.opacity(0.8))
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .padding(.horizontal)
-
-                // Select Budget Picker
-                Picker("Select Budget", selection: $selectedBudgetID) {
-                    ForEach(budgets, id: \.self) { budget in
-                        Text(budget.name ?? "Unnamed Budget")
-                            .tag(budget.id)
-                    }
-                }
-                .pickerStyle(MenuPickerStyle())
-                .padding()
-
-                HStack {
-                    CheckboxView(isChecked: $isRecurring, label: "Is Recurring")
-                }.padding()
-
-                Button(action: createExpense) {
-                    Text("Create")
-                        .fontWeight(.bold)
-                        .padding()
-                        .frame(maxWidth: .infinity)
                         .background(Color.purple)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
-                .padding(.horizontal)
             }
-        }
-        .sheet(isPresented: $showScanner) {
-            ReceiptScanner(scannedText: $scannedText, totalAmount: $totalAmount)
-                .onDisappear {
-                    if let amount = Double(totalAmount.replacingOccurrences(of: ",", with: "")) {
-                        amountSpent = amount
+            .navigationBarTitle("New Expense", displayMode: .inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        presentationMode.wrappedValue.dismiss()
                     }
                 }
-        }
-        .onAppear {
-            if let selected = selectedBudget {
-                selectedBudgetID = selected.id
             }
         }
     }
 
-    func createExpense() {
-        guard let selectedBudgetID = selectedBudgetID,
-              let selectedBudget = budgets.first(where: { $0.id == selectedBudgetID }) else {
-            print("No budget selected!")
+    func addExpense() {
+        guard !name.isEmpty else {
+            errorMessage = "Please enter a title."
             return
         }
 
-        let newExpense = Expense(context: viewContext)
-        newExpense.id = UUID()
-        newExpense.title = title
-        newExpense.amountSpent = amountSpent
-        newExpense.isRecurring = isRecurring
-        newExpense.date = Date()
-        newExpense.budget = selectedBudget
+        guard let amountDouble = Double(amount), amountDouble > 0 else {
+            errorMessage = "Enter a valid amount."
+            return
+        }
 
-        selectedBudget.value = max(0, selectedBudget.value - amountSpent)
+        let db = Firestore.firestore()
+        let expense = ExpenseModel(
+            id: UUID().uuidString,
+            name: name,
+            amount: amountDouble,
+            date: date,
+            budgetID: budget.id
+        )
 
-        do {
-            try viewContext.save()
-            presentationMode.wrappedValue.dismiss()
-        } catch {
-            print("Error saving expense: \(error.localizedDescription)")
+        db.collection("expenses").document(expense.id).setData(expense.toDict()) { error in
+            if let error = error {
+                self.errorMessage = "Failed to save expense: \(error.localizedDescription)"
+            } else {
+                updateBudgetValue(by: amountDouble)
+                onExpenseAdded?()
+                self.presentationMode.wrappedValue.dismiss()
+            }
         }
     }
-}
 
-struct CreateExpenseView_Previews: PreviewProvider {
-    static var previews: some View {
-        let context = PersistenceController.preview.container.viewContext
-
-        // Insert mock budget data to show in Picker preview
-        let mockBudget = Budget(context: context)
-        mockBudget.id = UUID()
-        mockBudget.name = "Mock Budget"
-        mockBudget.value = 1000
-        mockBudget.type = "Monthly"
-        mockBudget.date = Date()
-        mockBudget.isRecurring = false
-        mockBudget.setReminder = false
-        mockBudget.caption = "Preview Caption"
-        mockBudget.isActive = true
-
-        do {
-            try context.save()
-        } catch {
-            print("Failed to save preview budget: \(error)")
-        }
-
-        return CreateExpenseView(selectedBudget: mockBudget)
-            .environment(\.managedObjectContext, context)
+    func updateBudgetValue(by spent: Double) {
+        let db = Firestore.firestore()
+        let newValue = max(0, budget.value - spent)
+        db.collection("users")
+            .document(budget.userId)
+            .collection("budgets")
+            .document(budget.id)
+            .updateData(["value": newValue]) { error in
+                if error == nil {
+                    // You can optionally notify UI or update local budget state
+                }
+            }
     }
 }
