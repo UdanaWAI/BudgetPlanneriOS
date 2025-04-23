@@ -78,3 +78,30 @@ struct BudgetListView: View {
         viewModel.deleteBudget(budget)
     }
 }
+
+struct BudgetListView_Previews: PreviewProvider {
+    static var previews: some View {
+        // Mock AppUser
+        let mockUser = AppUser(id: "user123", username: "Jane Doe", mobile: "1234567890", email: "jane@example.com")
+        
+        // Mock AuthViewModel with AppUser
+        let mockAuthVM = AuthViewModel()
+        mockAuthVM.user = mockUser
+        
+        // Mock budgets data
+        let mockBudgets = [
+            BudgetModel(id: "1", name: "Groceries", caption: "Monthly food budget", value: 500.0, type: "Food", date: Date(), isRecurring: true, setReminder: true, isActive: true, userId: mockUser.id ?? ""),
+            BudgetModel(id: "2", name: "Entertainment", caption: "For movies and outings", value: 200.0, type: "Leisure", date: Date(), isRecurring: false, setReminder: false, isActive: false, userId: mockUser.id ?? "")
+        ]
+
+        // Mock BudgetViewModel
+        let mockBudgetVM = BudgetViewModel()
+        mockBudgetVM.budgets = mockBudgets
+
+        return BudgetListView()
+            .environmentObject(mockAuthVM)
+            .environmentObject(mockBudgetVM)
+            .previewDevice("iPhone 14")
+    }
+}
+

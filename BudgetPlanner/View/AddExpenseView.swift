@@ -92,3 +92,24 @@ struct CreateExpenseView: View {
             }
     }
 }
+
+struct CreateExpenseView_Previews: PreviewProvider {
+    static var previews: some View {
+        // Mock budget for preview
+        let mockBudget = BudgetModel(
+            id: "budget123",
+            name: "Mock Budget",
+            caption: "Preview Caption",
+            value: 1000.0,
+            type: "General",
+            date: Date(),
+            isRecurring: false,
+            setReminder: false,
+            isActive: true,
+            userId: "user123"
+        )
+
+        return CreateExpenseView(budget: mockBudget)
+            .previewDevice("iPhone 14")
+    }
+}

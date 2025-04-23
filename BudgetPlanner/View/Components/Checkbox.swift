@@ -11,7 +11,7 @@ struct CheckboxView: View {
         }) {
             HStack {
                 Image(systemName: isChecked ? "checkmark.square" : "square")
-                    .foregroundColor(isChecked ? .purple : .gray)
+                    .foregroundColor(isChecked ? .indigo : .gray)
                     .font(.title2)
                     .padding(.trailing, 5)
 

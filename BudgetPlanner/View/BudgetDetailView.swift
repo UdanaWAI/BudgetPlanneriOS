@@ -4,36 +4,31 @@ struct BudgetDetailView: View {
     let budget: BudgetModel
     @State private var showCreateExpense = false
     @StateObject private var expenseVM = ExpenseViewModel()
+    @Environment(\.presentationMode) var presentationMode
 
-    // Computed property to filter expenses related to the current budget
     var filteredExpenses: [ExpenseModel] {
         expenseVM.expenses.filter { $0.budgetID == budget.id }
     }
 
+    var totalExpenses: Double {
+        filteredExpenses.reduce(0) { $0 + $1.amount }
+    }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 10) {
 
-                // MARK: - Budget Info Section
+                CustomBackButton(title: "Personal Budget")
+
+                BudgetView(
+                    title: budget.name,
+                    currentBalance: budget.value - totalExpenses,
+                    expenses: totalExpenses,
+                    monthlyBudget: budget.value,
+                    monthYear: formattedMonth(budget.date)
+                )
+
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(budget.name)
-                        .font(.title)
-                        .bold()
-
-                    Text("Current Balance")
-                        .font(.caption)
-
-                    Text("$\(budget.value, specifier: "%.2f")")
-                        .font(.largeTitle)
-                        .bold()
-                        .foregroundColor(.purple)
-
-                    Text(formattedMonth(budget.date))
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-
-                    Divider()
-
                     Text("Caption: \(budget.caption)")
                         .font(.body)
 
@@ -42,16 +37,18 @@ struct BudgetDetailView: View {
 
                     Divider()
 
-                    CheckboxView(isChecked: .constant(budget.isRecurring), label: "Set Recurring")
-                    CheckboxView(isChecked: .constant(budget.setReminder), label: "Set Reminder")
-
+                    HStack{
+                        CheckboxView(isChecked: .constant(budget.isRecurring), label: "Set Recurring")
+                        Spacer()
+                        CheckboxView(isChecked: .constant(budget.setReminder), label: "Set Reminder")
+                    }
                     Button(action: {
                         showCreateExpense = true
                     }) {
                         Label("Add Expense", systemImage: "plus")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.purple)
+                            .background(Color.indigo)
                             .foregroundColor(.white)
                             .cornerRadius(10)
                             .padding(.top)
@@ -79,7 +76,7 @@ struct BudgetDetailView: View {
             }
             .padding(.top)
         }
-        .navigationTitle("Personal Budget")
+        .navigationBarBackButtonHidden(true) // Hide system back button
         .onAppear {
             expenseVM.fetchExpenses(for: budget.id)
         }
@@ -94,5 +91,37 @@ struct BudgetDetailView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "LLLL yyyy"
         return formatter.string(from: date)
+    }
+}
+
+
+struct BudgetDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        // Mock BudgetModel data
+        let mockBudget = BudgetModel(
+            id: "1",
+            name: "Personal Budget",
+            caption: "Monthly expenses for personal use",
+            value: 1500.00,
+            type: "Personal",
+            date: Date(),
+            isRecurring: true,
+            setReminder: true,
+            userId: "user123"
+        )
+
+        // Mock expenses that belong to this budget
+        let mockExpenses = [
+            ExpenseModel(id: "1", name: "Groceries", amount: 200, date: Date(), budgetID: mockBudget.id),
+            ExpenseModel(id: "2", name: "Dining Out", amount: 50, date: Date(), budgetID: mockBudget.id)
+        ]
+        
+        // Create the ExpenseViewModel with mock data
+        let expenseVM = ExpenseViewModel()
+        expenseVM.expenses = mockExpenses
+
+        return BudgetDetailView(budget: mockBudget)
+            .environmentObject(expenseVM) // Pass ExpenseViewModel as an environment object
+            .previewDevice("iPhone 12") // Adjust to desired preview device
     }
 }

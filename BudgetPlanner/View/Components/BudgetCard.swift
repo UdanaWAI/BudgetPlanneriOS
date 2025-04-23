@@ -9,7 +9,7 @@ struct BudgetCardView: View {
         HStack {
             Image(systemName: "person.crop.circle.fill")
                 .font(.largeTitle)
-                .foregroundColor(.purple)
+                .foregroundColor(.indigo)
             VStack(alignment: .leading) {
                 Text(name)
                     .font(.headline)

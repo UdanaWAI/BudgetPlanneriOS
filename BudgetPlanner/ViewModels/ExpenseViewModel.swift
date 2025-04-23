@@ -20,16 +20,32 @@ class ExpenseViewModel: ObservableObject {
     }
 
     // Add a new expense
-    func addExpense(_ expense: ExpenseModel) {
+    func addExpense(_ expense: ExpenseModel, for budget: BudgetModel) {
         db.collection("expenses").addDocument(data: expense.toDict()) { error in
             if let error = error {
                 print("Error adding expense: \(error)")
             } else {
                 self.fetchExpenses(for: expense.budgetID) // refresh list
+                self.updateBudgetValue(by: expense.amount, for: budget)
             }
         }
     }
 
+    private func updateBudgetValue(by spent: Double, for budget: BudgetModel) {
+            let newValue = max(0, budget.value - spent)
+
+            db.collection("users")
+                .document(budget.userId)
+                .collection("budgets")
+                .document(budget.id)
+                .updateData(["value": newValue]) { error in
+                    if error == nil {
+                        // Optional: Update local model to reflect UI change
+                        budget.value = newValue
+                    }
+                }
+        }
+    
     // Delete an expense
     func deleteExpense(_ expense: ExpenseModel) {
         db.collection("expenses").document(expense.id).delete() { error in
