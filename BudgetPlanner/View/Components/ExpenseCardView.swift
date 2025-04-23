@@ -4,6 +4,26 @@ struct ExpenseCardView: View {
     let expense: ExpenseModel
     let budgetValue: Double
 
+    private let themeColor: Color = ExpenseCardView.randomThemeColor()
+
+    static func randomThemeColor() -> Color {
+        let colors: [Color] = [.blue, .green, .orange, .cyan, .purple, .red, .teal, .yellow]
+            return colors.randomElement() ?? .purple }
+    
+    private var iconName: String {
+            let lowercasedName = expense.name.lowercased()
+
+            if lowercasedName.contains("food") || lowercasedName.contains("lunch") || lowercasedName.contains("dinner") || lowercasedName.contains("snack") {
+                return "fork.knife"
+            } else if lowercasedName.contains("bill") {
+                return "doc.text.fill"
+            } else if lowercasedName.contains("fuel") || lowercasedName.contains("car") || lowercasedName.contains("vehicle") || lowercasedName.contains("transport") {
+                return "car.fill"
+            } else {
+                return "creditcard.fill"
+            }
+        }
+    
     var progress: Double {
         guard budgetValue > 0 else { return 0 }
         return min(expense.amount / budgetValue, 1.0)
@@ -15,13 +35,13 @@ struct ExpenseCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Top Section (Icon, Title, Budget)
+           
             HStack {
-                Image(systemName: "creditcard.fill")
-                    .foregroundColor(.purple)
+                Image(systemName: iconName)
+                    .foregroundColor(themeColor)
                     .font(.title)
                     .padding()
-                    .background(Color.purple.opacity(0.2))
+                    .background(themeColor.opacity(0.2))
                     .clipShape(Circle())
 
                 VStack(alignment: .leading) {
@@ -35,9 +55,8 @@ struct ExpenseCardView: View {
                 Spacer()
             }
 
-            // Progress Bar
             ProgressView(value: progress)
-                .progressViewStyle(LinearProgressViewStyle(tint: .purple))
+                .progressViewStyle(LinearProgressViewStyle(tint: themeColor))
 
             HStack {
                 Spacer()

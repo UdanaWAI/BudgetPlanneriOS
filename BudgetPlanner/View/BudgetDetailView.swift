@@ -30,10 +30,12 @@ struct BudgetDetailView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Caption: \(budget.caption)")
-                        .font(.body)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundColor(.gray)
 
                     Text("Budget Type: \(budget.type)")
-                        .font(.body)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.gray)
 
                     Divider()
 
@@ -56,11 +58,16 @@ struct BudgetDetailView: View {
                 }
                 .padding(.horizontal)
 
-                // MARK: - Expense Cards Section
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Expenses")
-                        .font(.headline)
-                        .padding(.horizontal)
+                    HStack{
+                        Spacer()
+                        Text("Expenses")
+                            .font(.headline)
+                            .padding(.horizontal)
+                            .foregroundColor(.indigo)
+                        Spacer()
+                    }
+                    Divider()
 
                     if filteredExpenses.isEmpty {
                         Text("No expenses yet.")
@@ -76,7 +83,7 @@ struct BudgetDetailView: View {
             }
             .padding(.top)
         }
-        .navigationBarBackButtonHidden(true) // Hide system back button
+        .navigationBarBackButtonHidden(true)
         .onAppear {
             expenseVM.fetchExpenses(for: budget.id)
         }
@@ -97,7 +104,7 @@ struct BudgetDetailView: View {
 
 struct BudgetDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        // Mock BudgetModel data
+       
         let mockBudget = BudgetModel(
             id: "1",
             name: "Personal Budget",
@@ -110,18 +117,18 @@ struct BudgetDetailView_Previews: PreviewProvider {
             userId: "user123"
         )
 
-        // Mock expenses that belong to this budget
+      
         let mockExpenses = [
             ExpenseModel(id: "1", name: "Groceries", amount: 200, date: Date(), budgetID: mockBudget.id),
             ExpenseModel(id: "2", name: "Dining Out", amount: 50, date: Date(), budgetID: mockBudget.id)
         ]
         
-        // Create the ExpenseViewModel with mock data
+       
         let expenseVM = ExpenseViewModel()
         expenseVM.expenses = mockExpenses
 
         return BudgetDetailView(budget: mockBudget)
-            .environmentObject(expenseVM) // Pass ExpenseViewModel as an environment object
-            .previewDevice("iPhone 12") // Adjust to desired preview device
+            .environmentObject(expenseVM)
+            .previewDevice("iPhone 12")
     }
 }
