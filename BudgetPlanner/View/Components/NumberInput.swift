@@ -11,7 +11,9 @@ struct NumberInputComponent: View {
                 .foregroundColor(.gray)
             TextField(title, value: $value, formatter: NumberFormatter())
                 .keyboardType(.decimalPad)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(12).background(Color(.white)).cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 15).stroke(Color.gray.opacity(0.4), lineWidth: 1))
+            
         }
         .padding(.horizontal)
     }

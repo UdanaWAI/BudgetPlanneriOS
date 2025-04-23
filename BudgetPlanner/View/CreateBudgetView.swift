@@ -32,7 +32,7 @@ struct CreateBudgetView: View {
                     .padding()
 
                 TextFieldComponent(title: "Budget Name", text: $name)
-                TextFieldComponent(title: "Caption", text: $caption)
+                TextFieldComponent(title: "Discription", text: $caption)
                 NumberInputComponent(title: "Value", value: $value)
                 DropdownComponent(label: "Select Budget Type", selectedOption: $type, options: ["Monthly", "Weekly", "Daily"])
                 DatePickerComponent(label: "Select Date", date: $date)
