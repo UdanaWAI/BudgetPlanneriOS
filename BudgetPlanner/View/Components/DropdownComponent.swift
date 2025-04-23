@@ -6,20 +6,52 @@ struct DropdownComponent: View {
     var options: [String]
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(label)
                 .font(.caption)
                 .foregroundColor(.gray)
-            Picker(selection: $selectedOption, label: Text(label)) {
+
+            Menu {
                 ForEach(options, id: \.self) { option in
-                    Text(option).tag(option)
+                    Button(action: {
+                        selectedOption = option
+                    }) {
+                        Text(option)
+                    }
                 }
+            } label: {
+                HStack {
+                    Text(selectedOption)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .foregroundColor(.gray)
+                        .imageScale(.small)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                )
             }
-            .pickerStyle(MenuPickerStyle())
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
         }
         .padding(.horizontal)
+    }
+}
+
+
+struct DropdownComponent_Previews: PreviewProvider {
+    @State static var previewSelection = "Monthly"
+
+    static var previews: some View {
+        DropdownComponent(
+            label: "Select Budget type",
+            selectedOption: $previewSelection,
+            options: ["Monthly", "Weekly", "Daily"]
+        )
+        .previewLayout(.sizeThatFits)
+        .padding()
     }
 }

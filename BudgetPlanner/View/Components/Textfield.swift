@@ -14,7 +14,7 @@ struct TextBox: View {
 
             TextField(placeholder, text: $text)
                 .padding(.vertical,12).padding(.horizontal,10)
-                .background(RoundedRectangle(cornerRadius: 10
+                .background(RoundedRectangle(cornerRadius: 15
                                             ).stroke(Color.gray.opacity(0.4)))
                 .font(.system(size: 16))
         }

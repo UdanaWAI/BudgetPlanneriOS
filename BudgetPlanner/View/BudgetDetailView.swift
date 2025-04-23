@@ -18,7 +18,7 @@ struct BudgetDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
 
-                CustomBackButton(title: "Personal Budget")
+                CustomBackButton(title: "Personal Budget", foregroundColor:Color.indigo)
 
                 BudgetView(
                     title: budget.name,

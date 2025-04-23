@@ -21,59 +21,46 @@ struct CreateBudgetView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Text("Create Personal Budget")
-                    .font(.title2)
-                    .padding(.top)
-
+                CustomBackButton(title: "Create Personal Budget", foregroundColor:Color.indigo)
+                
                 Image(systemName: "chart.pie.fill")
                     .resizable()
                     .frame(width: 100, height: 100)
                     .foregroundColor(.purple)
                     .padding()
-
+                
                 TextFieldComponent(title: "Budget Name", text: $name)
                 TextFieldComponent(title: "Discription", text: $caption)
                 NumberInputComponent(title: "Value", value: $value)
                 DropdownComponent(label: "Select Budget Type", selectedOption: $type, options: ["Monthly", "Weekly", "Daily"])
                 DatePickerComponent(label: "Select Date", date: $date)
-
+                
                 HStack {
                     CheckboxView(isChecked: $isRecurring, label: "Set Recurring")
                     Spacer()
                     CheckboxView(isChecked: $setReminder, label: "Set Reminder")
                 }.padding()
-
+                
                 if let error = errorMessage {
                     Text(error)
                         .foregroundColor(.red)
                         .padding(.top, 5)
                 }
-
-                Button(action: createBudget) {
-                    if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.purple)
-                            .cornerRadius(10)
-                    } else {
-                        Text("Create")
-                            .fontWeight(.bold)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.purple)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
+                
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .purple))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else {
+                    PrimaryButton(title: "Create", action: createBudget)
+                        .padding(.horizontal)
                 }
-                .disabled(isLoading)
-                .padding(.horizontal)
             }
-        }
-        .padding()
+            .padding(.vertical)
+        }.navigationBarBackButtonHidden(true)
     }
-
+    
     func createBudget() {
         guard let userId = authVM.user?.id else {
             errorMessage = "User not logged in."

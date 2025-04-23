@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - PasswordField Component
 struct PasswordField: View {
     @Binding var password: String
     var placeholder: String
@@ -33,7 +32,7 @@ struct PasswordField: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 10)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 15)
                     .stroke(Color.gray.opacity(0.4))
             )
             .font(.system(size: 16))
@@ -41,7 +40,6 @@ struct PasswordField: View {
     }
 }
 
-// MARK: - Preview
 struct PasswordField_Previews: PreviewProvider {
     static var previews: some View {
         PasswordField(password: .constant(""), placeholder: "Enter password", label: "Password")

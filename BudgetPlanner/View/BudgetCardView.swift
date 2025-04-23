@@ -8,10 +8,16 @@ struct BudgetListView: View {
     var body: some View {
         NavigationView {
             VStack {
-                Text("Personal Budget List")
-                    .font(.title2)
-                    .padding(.top)
-
+               ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 30)
+                       .fill(Color.indigo)
+                        .frame(height: 180)
+                        .edgesIgnoringSafeArea(.top)
+                    
+                   CustomBackButton(title: "Personal Budget List", foregroundColor:Color.white)
+                        .padding(.leading, 10)
+                }.frame(maxWidth: .infinity)
+                
                 ScrollView {
                     ForEach(viewModel.budgets) { budget in
                         NavigationLink(
@@ -23,7 +29,7 @@ struct BudgetListView: View {
                                 name: budget.name,
                                 month: formattedMonth(budget.date),
                                 isActive: budget.isActive
-                            )
+                            ).padding(.top,10)
                             .contextMenu {
                                 Button(action: {
                                     setActiveBudget(budget)
@@ -40,7 +46,7 @@ struct BudgetListView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
-                }
+                }.padding(.top, -100)
 
                 NavigationLink(destination: CreateBudgetView()) {
                     HStack {
@@ -48,12 +54,12 @@ struct BudgetListView: View {
                         Text("Create New Budget")
                     }
                     .padding()
-                    .background(Color.purple.opacity(0.1))
-                    .cornerRadius(12)
+                    .foregroundColor(Color.indigo)
+                    .background(Color.indigo.opacity(0.1))
+                    .cornerRadius(50)
                 }
                 .padding()
-            }
-            .padding(.horizontal)
+            }.navigationBarBackButtonHidden(true)
             .onAppear {
                 if let userId = authVM.user?.id {
                     viewModel.fetchBudgets(for: userId)
@@ -68,12 +74,10 @@ struct BudgetListView: View {
         return formatter.string(from: date)
     }
 
-    // MARK: - Set Budget as Active
     private func setActiveBudget(_ selected: BudgetModel) {
         viewModel.setActive(selected)
     }
 
-    // MARK: - Delete Budget
     private func deleteBudget(_ budget: BudgetModel) {
         viewModel.deleteBudget(budget)
     }
@@ -81,20 +85,17 @@ struct BudgetListView: View {
 
 struct BudgetListView_Previews: PreviewProvider {
     static var previews: some View {
-        // Mock AppUser
+   
         let mockUser = AppUser(id: "user123", username: "Jane Doe", mobile: "1234567890", email: "jane@example.com")
-        
-        // Mock AuthViewModel with AppUser
+
         let mockAuthVM = AuthViewModel()
         mockAuthVM.user = mockUser
-        
-        // Mock budgets data
+
         let mockBudgets = [
             BudgetModel(id: "1", name: "Groceries", caption: "Monthly food budget", value: 500.0, type: "Food", date: Date(), isRecurring: true, setReminder: true, isActive: true, userId: mockUser.id ?? ""),
             BudgetModel(id: "2", name: "Entertainment", caption: "For movies and outings", value: 200.0, type: "Leisure", date: Date(), isRecurring: false, setReminder: false, isActive: false, userId: mockUser.id ?? "")
         ]
 
-        // Mock BudgetViewModel
         let mockBudgetVM = BudgetViewModel()
         mockBudgetVM.budgets = mockBudgets
 

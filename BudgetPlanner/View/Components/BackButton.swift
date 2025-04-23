@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CustomBackButton: View {
     let title: String
+    let foregroundColor: Color
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
@@ -14,7 +15,7 @@ struct CustomBackButton: View {
                     Text(title)
                         .fontWeight(.medium)
                 }
-                .foregroundColor(.indigo)
+                .foregroundColor(foregroundColor)
                 .font(.headline)
             }
             Spacer()

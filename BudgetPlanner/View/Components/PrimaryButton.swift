@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - PrimaryButton Component
 struct PrimaryButton: View {
     var title: String
     var action: () -> Void
@@ -18,7 +17,6 @@ struct PrimaryButton: View {
     }
 }
 
-// MARK: - Preview
 struct PrimaryButton_Previews: PreviewProvider {
     static var previews: some View {
         PrimaryButton(title: "Continue") {}
