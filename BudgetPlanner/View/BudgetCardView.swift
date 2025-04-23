@@ -11,11 +11,12 @@ struct BudgetListView: View {
                ZStack(alignment: .topLeading) {
                     RoundedRectangle(cornerRadius: 30)
                        .fill(Color.indigo)
-                        .frame(height: 180)
+                        .frame(height: 130)
                         .edgesIgnoringSafeArea(.top)
                     
                    CustomBackButton(title: "Personal Budget List", foregroundColor:Color.white)
                         .padding(.leading, 10)
+                        .padding(.top, 10)
                 }.frame(maxWidth: .infinity)
                 
                 ScrollView {
@@ -46,7 +47,7 @@ struct BudgetListView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
-                }.padding(.top, -100)
+                }.padding(.top, -30)
 
                 NavigationLink(destination: CreateBudgetView()) {
                     HStack {
@@ -65,7 +66,7 @@ struct BudgetListView: View {
                     viewModel.fetchBudgets(for: userId)
                 }
             }
-        }
+        }.navigationBarBackButtonHidden(true)
     }
 
     func formattedMonth(_ date: Date) -> String {

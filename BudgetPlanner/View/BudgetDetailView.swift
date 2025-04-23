@@ -2,8 +2,8 @@ import SwiftUI
 
 struct BudgetDetailView: View {
     let budget: BudgetModel
-    @State private var showCreateExpense = false
     @StateObject private var expenseVM = ExpenseViewModel()
+    @StateObject private var budgetVM = BudgetViewModel()
     @Environment(\.presentationMode) var presentationMode
 
     var filteredExpenses: [ExpenseModel] {
@@ -18,7 +18,8 @@ struct BudgetDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
 
-                CustomBackButton(title: "Personal Budget", foregroundColor:Color.indigo)
+                
+                CustomBackButton(title: "Personal Budget", foregroundColor: .indigo)
 
                 BudgetView(
                     title: budget.name,
@@ -39,14 +40,19 @@ struct BudgetDetailView: View {
 
                     Divider()
 
-                    HStack{
+                    HStack {
                         CheckboxView(isChecked: .constant(budget.isRecurring), label: "Set Recurring")
                         Spacer()
                         CheckboxView(isChecked: .constant(budget.setReminder), label: "Set Reminder")
                     }
-                    Button(action: {
-                        showCreateExpense = true
-                    }) {
+
+                    NavigationLink(destination: AddExpensesView(
+                        budgetViewModel: budgetVM,
+                        preselectedBudget: budget,
+                        onExpenseAdded: {
+                            expenseVM.fetchExpenses(for: budget.id)
+                        }
+                    )) {
                         Label("Add Expense", systemImage: "plus")
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -59,7 +65,7 @@ struct BudgetDetailView: View {
                 .padding(.horizontal)
 
                 VStack(alignment: .leading, spacing: 16) {
-                    HStack{
+                    HStack {
                         Spacer()
                         Text("Expenses")
                             .font(.headline)
@@ -67,6 +73,7 @@ struct BudgetDetailView: View {
                             .foregroundColor(.indigo)
                         Spacer()
                     }
+
                     Divider()
 
                     if filteredExpenses.isEmpty {
@@ -86,49 +93,13 @@ struct BudgetDetailView: View {
         .navigationBarBackButtonHidden(true)
         .onAppear {
             expenseVM.fetchExpenses(for: budget.id)
-        }
-        .sheet(isPresented: $showCreateExpense) {
-            CreateExpenseView(budget: budget) {
-                expenseVM.fetchExpenses(for: budget.id)
-            }
-        }
+            budgetVM.fetchBudgets(for: budget.userId)
+        }.navigationBarBackButtonHidden(true)
     }
 
     func formattedMonth(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "LLLL yyyy"
         return formatter.string(from: date)
-    }
-}
-
-
-struct BudgetDetailView_Previews: PreviewProvider {
-    static var previews: some View {
-       
-        let mockBudget = BudgetModel(
-            id: "1",
-            name: "Personal Budget",
-            caption: "Monthly expenses for personal use",
-            value: 1500.00,
-            type: "Personal",
-            date: Date(),
-            isRecurring: true,
-            setReminder: true,
-            userId: "user123"
-        )
-
-      
-        let mockExpenses = [
-            ExpenseModel(id: "1", name: "Groceries", amount: 200, date: Date(), budgetID: mockBudget.id),
-            ExpenseModel(id: "2", name: "Dining Out", amount: 50, date: Date(), budgetID: mockBudget.id)
-        ]
-        
-       
-        let expenseVM = ExpenseViewModel()
-        expenseVM.expenses = mockExpenses
-
-        return BudgetDetailView(budget: mockBudget)
-            .environmentObject(expenseVM)
-            .previewDevice("iPhone 12")
     }
 }
