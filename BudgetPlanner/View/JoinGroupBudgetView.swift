@@ -8,7 +8,7 @@ struct JoinGroupBudgetView: View {
     @State private var joinMessage: String = ""
     @State private var showAlert = false
     
-    var userId: String  // This should be passed from the parent view
+    var userId: String
 
     var body: some View {
         NavigationView {
@@ -41,7 +41,6 @@ struct JoinGroupBudgetView: View {
         }
     }
 
-    // MARK: - Join Logic
     func joinGroupBudget() {
         isJoining = true
         let db = Firestore.firestore()
@@ -68,7 +67,6 @@ struct JoinGroupBudgetView: View {
                             let budgetID = budgetDoc.documentID
                             let budgetRef = groupBudgetsRef.document(budgetID)
 
-                            // Add userId to members array if not already there
                             budgetRef.updateData([
                                 "members": FieldValue.arrayUnion([userId])
                             ]) { err in

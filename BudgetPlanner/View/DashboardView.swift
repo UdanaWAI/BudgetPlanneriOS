@@ -27,7 +27,7 @@ struct DashboardView: View {
                 NavigationLink(destination: BudgetListView(navigateBackToDashboard: $navigateToBudgetList), isActive: $navigateToBudgetList) { EmptyView() }
                 NavigationLink(destination: AddExpensesView(budgetViewModel: budgetViewModel), isActive: $navigateToAddExpenses) { EmptyView() }
                 NavigationLink(destination: ReportView(userId: authVM.user?.id ?? "", navigateBackToDashboard: $navigateToReports), isActive: $navigateToReports) { EmptyView() }
-                NavigationLink(destination: GroupBudgetListView(viewModel: GroupBudgetViewModel(userId: authVM.user?.id ?? "")), isActive: $navigateToGroupBudgetList) { EmptyView() }
+                NavigationLink(destination: GroupBudgetListView(viewModel: GroupBudgetViewModel(userId: authVM.user?.id ?? ""), navigateBackToDashboard: $navigateToGroupBudgetList), isActive: $navigateToGroupBudgetList) { EmptyView() }
                 NavigationLink(destination: JoinGroupBudgetView(userId: authVM.user?.id ?? ""), isActive: $navigateToJoinGroup) { EmptyView() }
 
                 // MARK: - Main Actions
