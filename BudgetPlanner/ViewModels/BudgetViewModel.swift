@@ -6,7 +6,6 @@ class BudgetViewModel: ObservableObject {
 
     private let db = Firestore.firestore()
 
-    // MARK: - Save Budget
     func saveBudget(_ budget: BudgetModel, completion: @escaping (Error?) -> Void) {
         guard !budget.userId.isEmpty else {
             completion(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "Invalid user"]))
@@ -22,7 +21,6 @@ class BudgetViewModel: ObservableObject {
             }
     }
 
-    // MARK: - Fetch Budgets
     func fetchBudgets(for userId: String) {
         db.collection("users")
             .document(userId)
@@ -46,8 +44,7 @@ class BudgetViewModel: ObservableObject {
             }
     }
 
-    // MARK: - Set Active Budget
-    func setActive(_ selected: BudgetModel) {
+  func setActive(_ selected: BudgetModel) {
         Task {
             do {
                 for budget in budgets {
@@ -73,7 +70,6 @@ class BudgetViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Delete Budget
     func deleteBudget(_ budget: BudgetModel) {
         Task {
             do {

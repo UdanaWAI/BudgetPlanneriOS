@@ -1,6 +1,4 @@
 import SwiftUI
-
-// MARK: - TextBox Component
 struct TextBox: View {
     @Binding var text: String
     var placeholder: String

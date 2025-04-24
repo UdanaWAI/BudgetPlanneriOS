@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - CheckboxView Component
 struct CheckboxView: View {
     @Binding var isChecked: Bool
     var label: String
@@ -24,7 +23,6 @@ struct CheckboxView: View {
     }
 }
 
-// MARK: - Preview
 struct CheckboxView_Previews: PreviewProvider {
     static var previews: some View {
         CheckboxView(isChecked: .constant(false), label: "I agree to the terms")

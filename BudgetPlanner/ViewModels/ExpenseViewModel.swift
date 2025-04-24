@@ -5,7 +5,6 @@ class ExpenseViewModel: ObservableObject {
     @Published var expenses = [ExpenseModel]()
     private var db = Firestore.firestore()
 
-    // Fetch expenses for a specific budget
     func fetchExpenses(for budgetID: String) {
         db.collection("expenses").whereField("budgetID", isEqualTo: budgetID).getDocuments { (querySnapshot, error) in
             if let error = error {
@@ -19,13 +18,12 @@ class ExpenseViewModel: ObservableObject {
         }
     }
 
-    // Add a new expense
     func addExpense(_ expense: ExpenseModel, for budget: BudgetModel) {
         db.collection("expenses").addDocument(data: expense.toDict()) { error in
             if let error = error {
                 print("Error adding expense: \(error)")
             } else {
-                self.fetchExpenses(for: expense.budgetID) // refresh list
+                self.fetchExpenses(for: expense.budgetID)
                 self.updateBudgetValue(by: expense.amount, for: budget)
             }
         }
@@ -40,19 +38,17 @@ class ExpenseViewModel: ObservableObject {
                 .document(budget.id)
                 .updateData(["value": newValue]) { error in
                     if error == nil {
-                        // Optional: Update local model to reflect UI change
                         budget.value = newValue
                     }
                 }
         }
     
-    // Delete an expense
     func deleteExpense(_ expense: ExpenseModel) {
         db.collection("expenses").document(expense.id).delete() { error in
             if let error = error {
                 print("Error deleting expense: \(error)")
             } else {
-                self.fetchExpenses(for: expense.budgetID) // refresh list
+                self.fetchExpenses(for: expense.budgetID)
             }
         }
     }

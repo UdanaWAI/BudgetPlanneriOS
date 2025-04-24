@@ -2,8 +2,8 @@ import SwiftUI
 import VisionKit
 
 struct ReceiptScannerView: View {
-    @State private var totalCost: String = ""      // Automatically updated with only total
-    @State private var showScanner = false         // Controls camera sheet
+    @State private var totalCost: String = ""
+    @State private var showScanner = false
 
     var body: some View {
         NavigationView {
@@ -32,7 +32,7 @@ struct ReceiptScannerView: View {
 
                     TextField("Total", text: $totalCost)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                         // Make it read-only
+                         
                 }
                 .padding(.horizontal)
 

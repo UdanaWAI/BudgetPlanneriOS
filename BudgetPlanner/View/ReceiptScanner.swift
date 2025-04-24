@@ -81,7 +81,5 @@ struct ReceiptScanner: UIViewControllerRepresentable {
             return "Not Found"
         }
 
-
-
     }
 }

@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct CustomAddExpenseButton: View {
+struct CustomCancelButton: View {
     let title: String
     let foregroundColor: Color
     var action: (() -> Void)? = nil

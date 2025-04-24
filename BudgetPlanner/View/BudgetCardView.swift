@@ -14,7 +14,7 @@ struct BudgetListView: View {
                     .frame(height: 130)
                     .edgesIgnoringSafeArea(.top)
 
-                CustomAddExpenseButton(title: "Personal Budget List", foregroundColor: .white) {
+                CustomCancelButton(title: "Personal Budget List", foregroundColor: .white) {
                     navigateBackToDashboard = false
                 }
                 .padding(.top, 10)

@@ -24,17 +24,17 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var authVM: AuthViewModel  // Access the AuthViewModel
+    @EnvironmentObject var authVM: AuthViewModel
 
     var body: some View {
         if let _ = authVM.user {
-            // If user is logged in, show Dashboard
+            
             DashboardView()
-                .environmentObject(authVM)  // Pass authVM to DashboardView
+                .environmentObject(authVM)
         } else {
-            // If user is logged out, show LoginView
+            
             LoginView()
-                .environmentObject(authVM)  // Pass authVM to LoginView
+                .environmentObject(authVM)
         }
     }
 }
@@ -43,6 +43,6 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-            .environmentObject(AuthViewModel()) // Provide the AuthViewModel here
+            .environmentObject(AuthViewModel()) 
     }
 }

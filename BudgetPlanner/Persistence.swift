@@ -3,12 +3,11 @@ import CoreData
 struct PersistenceController {
     static let shared = PersistenceController()
 
-    // MARK: - Preview Support for SwiftUI Previews
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
 
-        // Add mock budgets for preview/testing
+        
         for index in 0..<3 {
             let budget = Budget(context: viewContext)
             budget.id = UUID()
@@ -31,11 +30,10 @@ struct PersistenceController {
         return result
     }()
 
-    // MARK: - Core Data Stack
     let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "BudgetPlanner") // Match your .xcdatamodeld file name
+        container = NSPersistentContainer(name: "BudgetPlanner")
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         }

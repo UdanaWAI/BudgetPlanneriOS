@@ -1,7 +1,5 @@
 import SwiftUI
 
-
-// MARK: - Dropdown Component
 struct Dropdown: View {
     @Binding var selectedOption: String
     let options: [String]
@@ -26,8 +24,6 @@ struct Dropdown: View {
     }
 }
 
-
-// MARK: - Preview
 struct DropdownView: View {
     @State private var textValue = ""
     @State private var selectedBudget = "Monthly"

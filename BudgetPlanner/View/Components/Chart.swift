@@ -30,8 +30,7 @@ struct ChartView: View {
         .padding(.top)
     }
 
-    // You can later replace this with real dynamic data
-    func getData(for range: ChartRange) -> [ChartDataPoint] {
+   func getData(for range: ChartRange) -> [ChartDataPoint] {
         switch range {
         case .oneWeek:
             return [
@@ -43,7 +42,6 @@ struct ChartView: View {
                 .init(day: "SAT", value: 5000)
             ]
         default:
-            // Use same for simplicity
             return [
                 .init(day: "MON", value: 200),
                 .init(day: "TUE", value: 900),
@@ -98,9 +96,7 @@ struct ChartContent: View {
             }
             .frame(height: 240)
             .padding(.horizontal)
-        } else {
-            // Fallback on earlier versions
-        }
+        } 
     }
 }
 struct ChartView_Previews: PreviewProvider {

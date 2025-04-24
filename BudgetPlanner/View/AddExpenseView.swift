@@ -13,6 +13,8 @@ struct AddExpensesView: View {
     @State private var amount: String = ""
     @State private var date: Date = Date()
     @State private var errorMessage: String = ""
+    @State private var showReceiptScanner: Bool = false
+    @State private var scannedText: String = ""
 
     var body: some View {
         NavigationView {
@@ -54,11 +56,24 @@ struct AddExpensesView: View {
                         .cornerRadius(8)
                 }
                 .disabled(selectedBudget == nil && preselectedBudget == nil)
+
+                Button(action: {
+                    showReceiptScanner = true
+                }) {
+                    Text("Scan Receipt")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
             }
-            .navigationTitle("Add Expense")
+            .sheet(isPresented: $showReceiptScanner) {
+                ReceiptScanner(scannedText: $scannedText, totalAmount: $amount)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    CustomAddExpenseButton(title: "Add an Expense", foregroundColor: .blue) {
+                    CustomCancelButton(title: "Add an Expense", foregroundColor: .blue) {
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
