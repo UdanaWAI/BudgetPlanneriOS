@@ -3,6 +3,7 @@ import SwiftUI
 struct CreateGroupBudgetView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var viewModel: GroupBudgetViewModel
+    
     @State private var name = ""
     @State private var caption = ""
     @State private var value: Double = 0.0
@@ -10,9 +11,10 @@ struct CreateGroupBudgetView: View {
     @State private var date = Date()
     @State private var isRecurring = false
     @State private var setReminder = false
-    @State private var membersString = "" // Temporary string for the text field input
-    @State private var members: [String] = []
     
+    @State private var generatedJoinCode: String = UUID().uuidString.prefix(6).uppercased()
+    @State private var isJoinCodeCopied = false
+
     var body: some View {
         NavigationView {
             Form {
@@ -25,15 +27,30 @@ struct CreateGroupBudgetView: View {
                     Toggle("Recurring", isOn: $isRecurring)
                     Toggle("Set Reminder", isOn: $setReminder)
                 }
-                
-                Section(header: Text("Members")) {
-                    TextField("Add Members (comma separated)", text: $membersString)
-                        .onChange(of: membersString) { newValue in
-                            // Split the string into members when the user types
-                            self.members = newValue.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+
+                Section(header: Text("Join Link")) {
+                    HStack {
+                        Text("Join Code:")
+                        Spacer()
+                        Text(generatedJoinCode)
+                            .bold()
+                        Button(action: {
+                            let fullLink = "ntcbudget://join/\(generatedJoinCode)"
+                            UIPasteboard.general.string = fullLink
+                            isJoinCodeCopied = true
+                        }) {
+                            Image(systemName: isJoinCodeCopied ? "checkmark.circle.fill" : "doc.on.doc")
                         }
+                        .foregroundColor(.blue)
+                    }
+
+                    if isJoinCodeCopied {
+                        Text("Link copied to clipboard!")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
                 }
-                
+
                 Section {
                     Button("Save Budget") {
                         let newBudget = GroupBudgetModel(
@@ -45,7 +62,8 @@ struct CreateGroupBudgetView: View {
                             isRecurring: isRecurring,
                             setReminder: setReminder,
                             userId: viewModel.userId,
-                            members: members
+                            members: [viewModel.userId], // Only current user at creation
+                            joinCode: generatedJoinCode
                         )
                         
                         viewModel.addGroupBudget(newBudget)

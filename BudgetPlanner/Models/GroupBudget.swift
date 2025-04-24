@@ -13,6 +13,7 @@ class GroupBudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
     @Published var isActive: Bool
     @Published var userId: String
     @Published var members: [String]
+    @Published var joinCode: String 
 
     init(
         id: String = UUID().uuidString,
@@ -25,7 +26,8 @@ class GroupBudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
         setReminder: Bool,
         isActive: Bool = false,
         userId: String,
-        members: [String] = []
+        members: [String] = [],
+        joinCode: String = UUID().uuidString.prefix(8).description
     ) {
         self.id = id
         self.name = name
@@ -38,6 +40,7 @@ class GroupBudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
         self.isActive = isActive
         self.userId = userId
         self.members = members
+        self.joinCode = joinCode
     }
 
     func toDict() -> [String: Any] {
@@ -52,7 +55,8 @@ class GroupBudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
             "setReminder": setReminder,
             "isActive": isActive,
             "userId": userId,
-            "members": members
+            "members": members,
+            "joinCode": joinCode
         ]
     }
 
@@ -69,6 +73,7 @@ class GroupBudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
         let isActive = dict["isActive"] as? Bool ?? false
         let userId = dict["userId"] as? String ?? ""
         let members = dict["members"] as? [String] ?? []
+        let joinCode = dict["joinCode"] as? String ?? UUID().uuidString.prefix(8).description
 
         self.init(
             id: id,
@@ -81,7 +86,8 @@ class GroupBudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
             setReminder: setReminder,
             isActive: isActive,
             userId: userId,
-            members: members
+            members: members,
+            joinCode: joinCode
         )
     }
 

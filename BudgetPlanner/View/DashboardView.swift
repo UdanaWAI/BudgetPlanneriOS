@@ -9,81 +9,83 @@ struct DashboardView: View {
     @State private var navigateToBudgetList = false
     @State private var navigateToAddExpenses = false
     @State private var navigateToReports = false
-    @State private var navigateToGroupBudgetList = false  // State to handle group budget navigation
+    @State private var navigateToGroupBudgetList = false
+    @State private var navigateToJoinGroup = false
 
     var body: some View {
         NavigationView {
             VStack(spacing: 24) {
                 Spacer()
-                
+
                 if let user = authVM.user {
                     Text("Welcome, \(user.username) 👋")
                         .font(.title)
                         .fontWeight(.semibold)
                 }
-                
-                // Navigation Links
-                NavigationLink(destination: BudgetListView(navigateBackToDashboard: $navigateToBudgetList), isActive: $navigateToBudgetList) {
-                    EmptyView()
+
+                // MARK: - Navigation Links (Hidden)
+                NavigationLink(destination: BudgetListView(navigateBackToDashboard: $navigateToBudgetList), isActive: $navigateToBudgetList) { EmptyView() }
+                NavigationLink(destination: AddExpensesView(budgetViewModel: budgetViewModel), isActive: $navigateToAddExpenses) { EmptyView() }
+                NavigationLink(destination: ReportView(userId: authVM.user?.id ?? "", navigateBackToDashboard: $navigateToReports), isActive: $navigateToReports) { EmptyView() }
+                NavigationLink(destination: GroupBudgetListView(viewModel: GroupBudgetViewModel(userId: authVM.user?.id ?? "")), isActive: $navigateToGroupBudgetList) { EmptyView() }
+                NavigationLink(destination: JoinGroupBudgetView(userId: authVM.user?.id ?? ""), isActive: $navigateToJoinGroup) { EmptyView() }
+
+                // MARK: - Main Actions
+                Group {
+                    Button("View Budget") {
+                        navigateToBudgetList = true
+                    }
+                    .buttonStyle(DashboardButtonStyle(color: .blue))
+
+                    Button("Add Expenses") {
+                        navigateToAddExpenses = true
+                    }
+                    .buttonStyle(DashboardButtonStyle(color: .green))
+
+                    Button("View Reports") {
+                        navigateToReports = true
+                    }
+                    .buttonStyle(DashboardButtonStyle(color: .purple))
                 }
-                
-                NavigationLink(destination: AddExpensesView(budgetViewModel: budgetViewModel), isActive: $navigateToAddExpenses) {
-                    EmptyView()
+
+                Divider().padding(.top)
+
+                // MARK: - Group Budget Section
+                Group {
+                    Button("View Group Budgets") {
+                        navigateToGroupBudgetList = true
+                    }
+                    .buttonStyle(DashboardButtonStyle(color: .orange))
+
+                    Button("Join Group Budget") {
+                        navigateToJoinGroup = true
+                    }
+                    .buttonStyle(DashboardButtonStyle(color: .teal))
                 }
-                
-                NavigationLink(destination: ReportView(userId: authVM.user?.id ?? "", navigateBackToDashboard: $navigateToReports), isActive: $navigateToReports) {
-                    EmptyView()
-                }
-                
-                // NavigationLink for Group Budget List
-                NavigationLink(destination: GroupBudgetListView(viewModel: GroupBudgetViewModel(userId: authVM.user?.id ?? "")), isActive: $navigateToGroupBudgetList) {
-                    EmptyView()
-                }
-                
-                Button("View Group Budgets") {
-                    navigateToGroupBudgetList = true
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.orange) // Customize the color
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Button("View Budget") {
-                    navigateToBudgetList = true
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Button("Add Expenses") {
-                    navigateToAddExpenses = true
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
+
+                Spacer()
+
+                // MARK: - Logout
                 PrimaryButton(title: "Log Out") {
                     authVM.logout()
                 }
-                
-                Button("View Reports") {
-                    navigateToReports = true
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.purple)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Spacer()
             }
             .padding()
             .navigationBarBackButtonHidden(true)
         }
+    }
+}
+
+// MARK: - Reusable Button Style
+struct DashboardButtonStyle: ButtonStyle {
+    var color: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(color.opacity(configuration.isPressed ? 0.7 : 1))
+            .foregroundColor(.white)
+            .cornerRadius(10)
     }
 }
