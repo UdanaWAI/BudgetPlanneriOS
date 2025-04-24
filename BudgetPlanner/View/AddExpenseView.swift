@@ -1,12 +1,14 @@
 import SwiftUI
 import FirebaseFirestore
 
-struct CreateExpenseView: View {
+struct AddExpensesView: View {
     @Environment(\.presentationMode) var presentationMode
 
-    let budget: BudgetModel
+    @ObservedObject var budgetViewModel: BudgetViewModel
+    var preselectedBudget: BudgetModel? = nil
     var onExpenseAdded: (() -> Void)? = nil
 
+    @State private var selectedBudget: BudgetModel? = nil
     @State private var name: String = ""
     @State private var amount: String = ""
     @State private var date: Date = Date()
@@ -15,7 +17,23 @@ struct CreateExpenseView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Expense Details")) {
+                if preselectedBudget == nil {
+                    Section(header: Text("Choose a Budget")) {
+                        Picker("Budget", selection: $selectedBudget) {
+                            ForEach(budgetViewModel.budgets, id: \.id) { budget in
+                                Text(budget.name).tag(Optional(budget))
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                    }
+                } else {
+                    Section(header: Text("Budget")) {
+                        Text(preselectedBudget?.name ?? "")
+                            .foregroundColor(.gray)
+                    }
+                }
+
+                Section(header: Text("Expense Info")) {
                     TextField("Title", text: $name)
                     TextField("Amount", text: $amount)
                         .keyboardType(.decimalPad)
@@ -31,18 +49,25 @@ struct CreateExpenseView: View {
                     Text("Add Expense")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.purple)
+                        .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(8)
                 }
+                .disabled(selectedBudget == nil && preselectedBudget == nil)
             }
-            .navigationBarTitle("New Expense", displayMode: .inline)
+            .navigationTitle("Add Expense")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    CustomAddExpenseButton(title: "Add an Expense", foregroundColor: .blue) {
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .onAppear {
+            if let preselected = preselectedBudget {
+                selectedBudget = preselected
             }
         }
     }
@@ -58,6 +83,11 @@ struct CreateExpenseView: View {
             return
         }
 
+        guard let budget = selectedBudget else {
+            errorMessage = "Please select a budget."
+            return
+        }
+
         let db = Firestore.firestore()
         let expense = ExpenseModel(
             id: UUID().uuidString,
@@ -69,47 +99,25 @@ struct CreateExpenseView: View {
 
         db.collection("expenses").document(expense.id).setData(expense.toDict()) { error in
             if let error = error {
-                self.errorMessage = "Failed to save expense: \(error.localizedDescription)"
+                errorMessage = "Failed to save expense: \(error.localizedDescription)"
             } else {
-                updateBudgetValue(by: amountDouble)
+                updateBudgetValue(by: amountDouble, for: budget)
                 onExpenseAdded?()
-                self.presentationMode.wrappedValue.dismiss()
+                presentationMode.wrappedValue.dismiss()
             }
         }
     }
 
-    func updateBudgetValue(by spent: Double) {
-        let db = Firestore.firestore()
+    func updateBudgetValue(by spent: Double, for budget: BudgetModel) {
         let newValue = max(0, budget.value - spent)
-        db.collection("users")
+        Firestore.firestore().collection("users")
             .document(budget.userId)
             .collection("budgets")
             .document(budget.id)
             .updateData(["value": newValue]) { error in
                 if error == nil {
-                    // You can optionally notify UI or update local budget state
+                    budget.value = newValue
                 }
             }
-    }
-}
-
-struct CreateExpenseView_Previews: PreviewProvider {
-    static var previews: some View {
-        // Mock budget for preview
-        let mockBudget = BudgetModel(
-            id: "budget123",
-            name: "Mock Budget",
-            caption: "Preview Caption",
-            value: 1000.0,
-            type: "General",
-            date: Date(),
-            isRecurring: false,
-            setReminder: false,
-            isActive: true,
-            userId: "user123"
-        )
-
-        return CreateExpenseView(budget: mockBudget)
-            .previewDevice("iPhone 14")
     }
 }
