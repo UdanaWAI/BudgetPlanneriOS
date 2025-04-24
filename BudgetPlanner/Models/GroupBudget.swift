@@ -1,7 +1,7 @@
 import Foundation
 import FirebaseFirestore
 
-class BudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
+class GroupBudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
     @Published var id: String
     @Published var name: String
     @Published var caption: String
@@ -12,8 +12,9 @@ class BudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
     @Published var setReminder: Bool
     @Published var isActive: Bool
     @Published var userId: String
+    @Published var members: [String]
 
-   init(
+    init(
         id: String = UUID().uuidString,
         name: String,
         caption: String,
@@ -23,7 +24,8 @@ class BudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
         isRecurring: Bool,
         setReminder: Bool,
         isActive: Bool = false,
-        userId: String
+        userId: String,
+        members: [String] = []
     ) {
         self.id = id
         self.name = name
@@ -35,8 +37,10 @@ class BudgetModel: Identifiable, ObservableObject, Equatable, Hashable {
         self.setReminder = setReminder
         self.isActive = isActive
         self.userId = userId
+        self.members = members
     }
-func toDict() -> [String: Any] {
+
+    func toDict() -> [String: Any] {
         return [
             "id": id,
             "name": name,
@@ -47,7 +51,8 @@ func toDict() -> [String: Any] {
             "isRecurring": isRecurring,
             "setReminder": setReminder,
             "isActive": isActive,
-            "userId": userId
+            "userId": userId,
+            "members": members
         ]
     }
 
@@ -63,6 +68,7 @@ func toDict() -> [String: Any] {
         let setReminder = dict["setReminder"] as? Bool ?? false
         let isActive = dict["isActive"] as? Bool ?? false
         let userId = dict["userId"] as? String ?? ""
+        let members = dict["members"] as? [String] ?? []
 
         self.init(
             id: id,
@@ -74,16 +80,16 @@ func toDict() -> [String: Any] {
             isRecurring: isRecurring,
             setReminder: setReminder,
             isActive: isActive,
-            userId: userId
+            userId: userId,
+            members: members
         )
     }
 
-        static func == (lhs: BudgetModel, rhs: BudgetModel) -> Bool {
-            return lhs.id == rhs.id
-        }
+    static func == (lhs: GroupBudgetModel, rhs: GroupBudgetModel) -> Bool {
+        return lhs.id == rhs.id
+    }
 
-
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-        }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }

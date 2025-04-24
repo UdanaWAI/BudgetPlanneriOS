@@ -13,10 +13,9 @@ class ExpenseModel: Identifiable, ObservableObject, Hashable, Decodable {
         case name
         case amount
         case date
-        case budgetID = "budgetID" // Match Firestore field names
+        case budgetID = "budgetID" 
     }
 
-    // MARK: - Initializer
     init(id: String = UUID().uuidString, name: String, amount: Double, date: Date, budgetID: String) {
         self.id = id
         self.name = name
@@ -25,7 +24,6 @@ class ExpenseModel: Identifiable, ObservableObject, Hashable, Decodable {
         self.budgetID = budgetID
     }
 
-    // MARK: - Firebase Conversion
     func toDict() -> [String: Any] {
         return [
             "id": id,
@@ -36,7 +34,6 @@ class ExpenseModel: Identifiable, ObservableObject, Hashable, Decodable {
         ]
     }
 
-    // MARK: - Firebase Init (from Firebase Data)
     convenience init(from dict: [String: Any]) {
         let id = dict["id"] as? String ?? UUID().uuidString
         let name = dict["name"] as? String ?? ""
@@ -48,7 +45,6 @@ class ExpenseModel: Identifiable, ObservableObject, Hashable, Decodable {
         self.init(id: id, name: name, amount: amount, date: date, budgetID: budgetID)
     }
 
-    // MARK: - Hashable
     static func == (lhs: ExpenseModel, rhs: ExpenseModel) -> Bool {
         return lhs.id == rhs.id
     }
@@ -57,7 +53,6 @@ class ExpenseModel: Identifiable, ObservableObject, Hashable, Decodable {
         hasher.combine(id)
     }
 
-    // MARK: - Decodable
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
