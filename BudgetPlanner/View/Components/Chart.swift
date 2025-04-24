@@ -8,49 +8,46 @@ struct ChartDataPoint: Identifiable {
 }
 
 enum ChartRange: String, CaseIterable {
-    case oneWeek = "1W", oneMonth = "1M", threeMonths = "3M", sixMonths = "6M", oneYear = "1Y", all = "ALL"
+    case oneWeek = "1W", oneMonth = "1M", oneYear = "1Y", all = "ALL"
 }
 
-struct ChartView: View {
-    @State private var selectedRange: ChartRange = .oneWeek
-
+struct BudgetChartView: View {
+    @StateObject private var viewModel = ReportViewModel()
+    let userId: String
+    @State private var selectedRange: ChartRange = .oneMonth
+    
     var body: some View {
         VStack(spacing: 16) {
             Picker("", selection: $selectedRange) {
                 ForEach(ChartRange.allCases, id: \.self) { range in
                     Text(range.rawValue)
                         .tag(range)
+                        .foregroundColor(.indigo)
                 }
             }
             .pickerStyle(.segmented)
-            .padding(.horizontal)
-
-            ChartContent(data: getData(for: selectedRange))
+            .background(Color.indigo.opacity(0.8))
+            .cornerRadius(8)
+            .frame(width: 280)
+            
+            ChartContent(data: getChartData(for: selectedRange))
         }
         .padding(.top)
-    }
-
-   func getData(for range: ChartRange) -> [ChartDataPoint] {
-        switch range {
-        case .oneWeek:
-            return [
-                .init(day: "MON", value: 100),
-                .init(day: "TUE", value: 600),
-                .init(day: "WED", value: 800),
-                .init(day: "THR", value: 1600),
-                .init(day: "FRI", value: 2300),
-                .init(day: "SAT", value: 5000)
-            ]
-        default:
-            return [
-                .init(day: "MON", value: 200),
-                .init(day: "TUE", value: 900),
-                .init(day: "WED", value: 1200),
-                .init(day: "THR", value: 1800),
-                .init(day: "FRI", value: 2400),
-                .init(day: "SAT", value: 4300)
-            ]
+        .onAppear {
+            viewModel.fetchReport(for: userId)
         }
+    }
+    
+    func getChartData(for range: ChartRange) -> [ChartDataPoint] {
+        
+        var chartData: [ChartDataPoint] = []
+        
+        for report in viewModel.reportData {
+         
+            chartData.append(ChartDataPoint(day: report.budgetName, value: report.totalSpent))
+        }
+        
+        return chartData
     }
 }
 
@@ -62,28 +59,20 @@ struct ChartContent: View {
             Chart {
                 ForEach(data) { point in
                     LineMark(
-                        x: .value("Day", point.day),
-                        y: .value("Value", point.value)
+                        x: .value("Budget", point.day),
+                        y: .value("Amount", point.value)
                     )
                     .interpolationMethod(.catmullRom)
                     .lineStyle(StrokeStyle(lineWidth: 4))
                     .foregroundStyle(.blue)
                     
-                    AreaMark(
-                        x: .value("Day", point.day),
-                        y: .value("Value", point.value)
-                    )
-                    .foregroundStyle(.blue.opacity(0.2))
-                }
-                
-                if let last = data.last {
                     PointMark(
-                        x: .value("Day", last.day),
-                        y: .value("Value", last.value)
+                        x: .value("Budget", point.day),
+                        y: .value("Amount", point.value)
                     )
                     .foregroundStyle(.blue)
                     .annotation(position: .top) {
-                        Text("\(Int(last.value))")
+                        Text("\(Int(point.value))")
                             .font(.caption2)
                             .bold()
                             .foregroundColor(.white)
@@ -94,14 +83,15 @@ struct ChartContent: View {
                     }
                 }
             }
-            .frame(height: 240)
+            .frame(width:300, height: 300)
             .padding(.horizontal)
-        } 
+        }
     }
 }
-struct ChartView_Previews: PreviewProvider {
+
+struct BudgetChartView_Previews: PreviewProvider {
     static var previews: some View {
-        ChartView()
+        BudgetChartView(userId: "exampleUserId")
             .previewLayout(.sizeThatFits)
             .padding()
     }

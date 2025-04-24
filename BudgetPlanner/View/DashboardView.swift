@@ -7,7 +7,9 @@ struct DashboardView: View {
     @StateObject private var budgetViewModel = BudgetViewModel()
 
     @State private var navigateToBudgetList = false
+    @State private var navigateToReportt = false
     @State private var navigateToAddExpenses = false
+    @State private var navigateToReports = false
 
     var body: some View {
         NavigationView {
@@ -25,6 +27,10 @@ struct DashboardView: View {
                 }
 
                 NavigationLink(destination: AddExpensesView(budgetViewModel: budgetViewModel), isActive: $navigateToAddExpenses) {
+                    EmptyView()
+                }
+
+                NavigationLink(destination: ReportView(userId: authVM.user?.id ?? "", navigateBackToDashboard: $navigateToReports), isActive: $navigateToReports) {
                     EmptyView()
                 }
 
@@ -49,6 +55,15 @@ struct DashboardView: View {
                 PrimaryButton(title: "Log Out") {
                     authVM.logout()
                 }
+
+                Button("View Reports") {
+                    navigateToReports = true
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.purple)
+                .foregroundColor(.white)
+                .cornerRadius(10)
 
                 Spacer()
             }
