@@ -8,6 +8,8 @@
 	<string>We use your calendar to add budget reminders.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera for scanning receipts.</string>
+	<key>NSLocalNotificationUsageDescription</key>
+	<string>We need your permission to send reminders about your budget.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict/>

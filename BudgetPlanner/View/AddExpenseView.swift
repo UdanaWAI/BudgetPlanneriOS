@@ -118,10 +118,12 @@ struct AddExpensesView: View {
             } else {
                 updateBudgetValue(by: amountDouble, for: budget)
                 onExpenseAdded?()
+                scheduleExpenseNotification(expense: expense)
                 presentationMode.wrappedValue.dismiss()
             }
         }
     }
+
 
     func updateBudgetValue(by spent: Double, for budget: BudgetModel) {
         let newValue = max(0, budget.value - spent)
@@ -135,4 +137,24 @@ struct AddExpensesView: View {
                 }
             }
     }
+    
+    func scheduleExpenseNotification(expense: ExpenseModel) {
+        let content = UNMutableNotificationContent()
+        content.title = "New Expense Added"
+        content.body = "You have added a new expense: \(expense.name) for \(expense.amount) on \(expense.date.formatted(date: .abbreviated, time: .omitted))."
+        content.sound = .default
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+
+        let request = UNNotificationRequest(identifier: expense.id, content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error scheduling notification: \(error.localizedDescription)")
+            } else {
+                print("Notification scheduled successfully with ID: \(expense.id)")
+            }
+        }
+    }
+
 }
