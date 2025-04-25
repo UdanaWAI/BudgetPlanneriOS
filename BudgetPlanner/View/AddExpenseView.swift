@@ -16,67 +16,96 @@ struct AddExpensesView: View {
     @State private var showReceiptScanner: Bool = false
     @State private var scannedText: String = ""
 
+    @State private var navigateToBudgetList = false
+    @State private var navigateToReports = false
+    @State private var navigateToGroupBudgetList = false
+
     var body: some View {
         NavigationView {
-            Form {
-                if preselectedBudget == nil {
-                    Section(header: Text("Choose a Budget")) {
-                        Picker("Budget", selection: $selectedBudget) {
-                            ForEach(budgetViewModel.budgets, id: \.id) { budget in
-                                Text(budget.name).tag(Optional(budget))
+            VStack {
+                Form {
+                    if preselectedBudget == nil {
+                        Section(header: Text("Choose a Budget")) {
+                            Picker("Budget", selection: $selectedBudget) {
+                                ForEach(budgetViewModel.budgets, id: \.id) { budget in
+                                    Text(budget.name).tag(Optional(budget))
+                                }
                             }
+                            .pickerStyle(MenuPickerStyle())
                         }
-                        .pickerStyle(MenuPickerStyle())
+                    } else {
+                        Section(header: Text("Budget")) {
+                            Text(preselectedBudget?.name ?? "")
+                                .foregroundColor(.gray)
+                        }
                     }
-                } else {
-                    Section(header: Text("Budget")) {
-                        Text(preselectedBudget?.name ?? "")
-                            .foregroundColor(.gray)
+
+                    Section(header: Text("Expense Info")) {
+                        TextField("Title", text: $name)
+                        TextField("Amount", text: $amount)
+                            .keyboardType(.decimalPad)
+                        DatePicker("Date", selection: $date, displayedComponents: .date)
+                    }
+
+                    if !errorMessage.isEmpty {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                    }
+
+                    Button(action: addExpense) {
+                        Text("Add Expense")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .disabled(selectedBudget == nil && preselectedBudget == nil)
+
+                    Button(action: {
+                        showReceiptScanner = true
+                    }) {
+                        Text("Scan Receipt")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                }
+                .sheet(isPresented: $showReceiptScanner) {
+                    ReceiptScanner(scannedText: $scannedText, totalAmount: $amount)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        CustomCancelButton(title: "Add an Expense", foregroundColor: .blue) {
+                            presentationMode.wrappedValue.dismiss()
+                        }
                     }
                 }
 
-                Section(header: Text("Expense Info")) {
-                    TextField("Title", text: $name)
-                    TextField("Amount", text: $amount)
-                        .keyboardType(.decimalPad)
-                    DatePicker("Date", selection: $date, displayedComponents: .date)
-                }
+                Spacer()
 
-                if !errorMessage.isEmpty {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                }
-
-                Button(action: addExpense) {
-                    Text("Add Expense")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .disabled(selectedBudget == nil && preselectedBudget == nil)
-
-                Button(action: {
-                    showReceiptScanner = true
-                }) {
-                    Text("Scan Receipt")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-            }
-            .sheet(isPresented: $showReceiptScanner) {
-                ReceiptScanner(scannedText: $scannedText, totalAmount: $amount)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    CustomCancelButton(title: "Add an Expense", foregroundColor: .blue) {
+                // MARK: - Tab Bar
+                SimpleTabBar { selectedTab in
+                    switch selectedTab {
+                    case .dashboard:
                         presentationMode.wrappedValue.dismiss()
+                    case .personal:
+                           navigateToBudgetList = true
+                    case .expenses:
+                        break // already here
+                    case .reports:
+                        if let budget = selectedBudget ?? preselectedBudget {
+                            navigateToReports = true
+                        } else {
+                            errorMessage = "Cannot open Reports. No budget selected."
+                        }
+                    case .group:
+                        navigateToGroupBudgetList = true
                     }
                 }
+                .padding(.bottom, 4)
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -85,6 +114,22 @@ struct AddExpensesView: View {
                 selectedBudget = preselected
             }
         }
+        .background(
+            NavigationLink(destination: ReportView(userId: selectedBudget?.userId ?? "", navigateBackToDashboard: .constant(false)), isActive: $navigateToReports) {
+                EmptyView()
+            }
+        )
+        .background(
+            NavigationLink(destination: GroupBudgetListView(viewModel: GroupBudgetViewModel(userId: selectedBudget?.userId ?? ""), navigateBackToDashboard: .constant(false)), isActive: $navigateToGroupBudgetList) {
+                EmptyView()
+            }
+        )
+        .background(
+            NavigationLink(destination: BudgetListView(navigateBackToDashboard: $navigateToBudgetList), isActive: $navigateToBudgetList) {
+                EmptyView()
+            }
+
+        )
     }
 
     func addExpense() {
@@ -124,7 +169,6 @@ struct AddExpensesView: View {
         }
     }
 
-
     func updateBudgetValue(by spent: Double, for budget: BudgetModel) {
         let newValue = max(0, budget.value - spent)
         Firestore.firestore().collection("users")
@@ -137,7 +181,7 @@ struct AddExpensesView: View {
                 }
             }
     }
-    
+
     func scheduleExpenseNotification(expense: ExpenseModel) {
         let content = UNMutableNotificationContent()
         content.title = "New Expense Added"
@@ -156,5 +200,4 @@ struct AddExpensesView: View {
             }
         }
     }
-
 }

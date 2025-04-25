@@ -5,8 +5,7 @@ import UserNotifications
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // No need to call FirebaseApp.configure() here anymore
-        // Request notification permission
+
         requestNotificationPermission()
         return true
     }

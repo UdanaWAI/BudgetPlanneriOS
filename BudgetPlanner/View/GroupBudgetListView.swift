@@ -6,8 +6,12 @@ struct GroupBudgetListView: View {
     @State private var selectedBudget: GroupBudgetModel? = nil
     @Binding var navigateBackToDashboard: Bool
 
+    @State private var navigateToBudgetList = false
+    @State private var navigateToReports = false
+    @State private var navigateToExpenses = false
+
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 30)
                     .fill(Color.indigo)
@@ -34,12 +38,13 @@ struct GroupBudgetListView: View {
                         .padding(.top, 10)
                         .contextMenu {
                             Button(action: {
-                                
+                                // Future logic for setting active
                             }) {
                                 Label("Set Active", systemImage: "checkmark.circle.fill")
                             }
 
                             Button(role: .destructive) {
+                                // Future logic for deletion
                             } label: {
                                 Label("Delete", systemImage: "trash.fill")
                             }
@@ -61,7 +66,37 @@ struct GroupBudgetListView: View {
                 .cornerRadius(50)
             }
             .padding()
+
+            // MARK: - Tab Bar
+            SimpleTabBar { selectedTab in
+                switch selectedTab {
+                case .dashboard:
+                    navigateBackToDashboard = false
+                case .personal:
+                        navigateToBudgetList = true
+                case .expenses:
+                    navigateToExpenses = true
+                case .reports:
+                    navigateToReports = true
+                case .group:
+                    break // already here
+                }
+            }
+            .padding(.bottom, 4)
         }
+        .background(
+            Group {
+                NavigationLink(destination: AddExpensesView(budgetViewModel: BudgetViewModel()), isActive: $navigateToExpenses) {
+                    EmptyView()
+                }
+                NavigationLink(destination: BudgetListView(navigateBackToDashboard: $navigateToBudgetList), isActive: $navigateToBudgetList) {
+                    EmptyView()
+                }
+                NavigationLink(destination: ReportView(userId: viewModel.userId, navigateBackToDashboard: $navigateBackToDashboard), isActive: $navigateToReports) {
+                    EmptyView()
+                }
+            }
+        )
         .onAppear {
             viewModel.fetchGroupBudgets()
         }
