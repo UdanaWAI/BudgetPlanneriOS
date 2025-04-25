@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import FirebaseFirestore
+import PDFKit
 
 class ReportViewModel: ObservableObject {
     @Published var budgets: [BudgetModel] = []
@@ -62,4 +63,52 @@ class ReportViewModel: ObservableObject {
 
         self.reportData = report
     }
+    
+    func generatePDFReport() -> Data? {
+            let pdfMetaData = [
+                kCGPDFContextCreator: "Budget App",
+                kCGPDFContextAuthor: "Your App",
+                kCGPDFContextTitle: "Budget Report"
+            ]
+            let format = UIGraphicsPDFRendererFormat()
+            format.documentInfo = pdfMetaData as [String: Any]
+
+            let pageWidth = 612.0
+            let pageHeight = 792.0
+            let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight), format: format)
+
+            let data = renderer.pdfData { context in
+                context.beginPage()
+
+                var yPos: CGFloat = 20
+
+                let title = "Budget Report"
+                title.draw(at: CGPoint(x: 20, y: yPos), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 24)])
+                yPos += 40
+
+                for report in reportData {
+                    let budgetName = "Budget: \(report.budgetName)"
+                    let spent = "Spent: \(String(format: "%.2f", report.totalSpent))"
+                    let remaining = "Remaining: \(String(format: "%.2f", report.remainingAmount))"
+                    let percent = "Used: \(String(format: "%.1f", report.percentUsed))%"
+
+                    let content = "\(budgetName)\n\(spent)\n\(remaining)\n\(percent)\n\n"
+                    content.draw(at: CGPoint(x: 20, y: yPos), withAttributes: [.font: UIFont.systemFont(ofSize: 16)])
+                    yPos += 80
+                }
+            }
+
+            return data
+        }
+
+        func sharePDF(data: Data) {
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("BudgetReport.pdf")
+            do {
+                try data.write(to: tempURL)
+                let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+                UIApplication.shared.windows.first?.rootViewController?.present(activityVC, animated: true, completion: nil)
+            } catch {
+                print("Failed to write PDF data: \(error)")
+            }
+        }
 }

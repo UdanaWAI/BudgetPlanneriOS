@@ -15,9 +15,9 @@ struct RegisterView: View {
             Spacer()
 
             Text("Create Account")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.indigo)
+            Divider()
             TextBox(text: $username, placeholder: "Enter your username", lable: "Username")
 
             TextBox(text: $mobileNumber, placeholder: "Enter your mobile number", lable: "Mobile Number")

@@ -23,11 +23,10 @@ struct CreateBudgetView: View {
             VStack(spacing: 20) {
                 CustomBackButton(title: "Create Personal Budget", foregroundColor:Color.indigo)
                 
-                Image(systemName: "chart.pie.fill")
-                    .resizable()
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.purple)
-                    .padding()
+                Image("9846845 1")
+                     .resizable()
+                     .scaledToFit()
+                     .frame(width: 300, height: 300)
                 
                 TextFieldComponent(title: "Budget Name", text: $name)
                 TextFieldComponent(title: "Discription", text: $caption)

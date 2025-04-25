@@ -1,4 +1,5 @@
 import SwiftUI
+import PDFKit
 
 struct ReportView: View {
     @Environment(\.presentationMode) var presentationMode
@@ -21,7 +22,21 @@ struct ReportView: View {
             BudgetChartView(userId: userId)
                 .padding(.top, 30)
                 .padding(.vertical, 10)
-
+            Button(action: {
+                if let pdfData = viewModel.generatePDFReport() {
+                    viewModel.sharePDF(data: pdfData)
+                }
+            }) {
+                HStack {
+                    Image(systemName: "doc.richtext")
+                    Text("Generate PDF Report")
+                }
+                .padding()
+                .foregroundColor(Color.indigo)
+                .background(Color.indigo.opacity(0.1))
+                .cornerRadius(50)
+            }
+            .padding(.horizontal)
             List(viewModel.reportData) { report in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(report.budgetName)
@@ -38,9 +53,9 @@ struct ReportView: View {
                 .padding(.vertical, 6)
             }
             .navigationBarBackButtonHidden(true)
-
-            Spacer()
-
+            
+            .frame(height: 150)
+            
             // Tab Bar
             SimpleTabBar { selectedTab in
                 switch selectedTab {

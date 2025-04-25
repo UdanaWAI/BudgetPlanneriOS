@@ -8,18 +8,23 @@ struct LoginView: View {
     @EnvironmentObject var authVM: AuthViewModel
     
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing:20) {
             Spacer()
 
-            Text("Welcome Back")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-
-            TextBox(text: $email, placeholder: "Enter your email", lable: "Email")
+           Image("Mar-Business_16 1-3")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 300, height: 300)
+            
+            TextBox(text: $email, placeholder: "Enter your email", lable: "Email").autocorrectionDisabled(false).textInputAutocapitalization(.none)
 
             PasswordField(password: $password, placeholder: "Enter your password", label: "Password")
 
-            CheckboxView(isChecked: $rememberMe, label: "Remember me")
+            HStack{
+                CheckboxView(isChecked: $rememberMe, label: "Remember me")
+                Spacer()
+            }
+            
 
             if !errorMessage.isEmpty {
                 Text(errorMessage)
@@ -34,14 +39,28 @@ struct LoginView: View {
                     }
                 }
             }
-
-            PrimaryButton(title: "Login with Face ID / Touch ID") {
+            
+            Button(action: {
                 authVM.biometricLogin { error in
                     if let error = error {
                         print("Biometric login error:", error)
                     }
                 }
+            }) {
+                VStack(spacing: 8) {
+                    Image(systemName: "touchid")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 40, height: 40)
+                        .foregroundColor(Color.indigo)
+                }
+                .padding(5)
+                .background(Color.white)
+                .cornerRadius(50)
+                .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
             }
+
+
 
             Spacer()
 

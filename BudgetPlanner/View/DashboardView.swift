@@ -21,7 +21,7 @@ struct DashboardView: View {
                     .fill(Color.indigo)
                     .frame(height: 130)
                     .edgesIgnoringSafeArea(.top)
-                Spacer(minLength: 10)
+                    .padding(.top,-22)
                 // welcome and log out
                 HStack {
                     if let user = authVM.user {
@@ -44,7 +44,7 @@ struct DashboardView: View {
                     .accessibilityLabel("Log Out")
                 }
                 .padding(.top,15).padding(.horizontal,20)
-            }.padding(.top,-15)
+            }
 
             // Fetch active budget and display BudgetView
             if let activeBudget = activeBudget {
@@ -55,14 +55,14 @@ struct DashboardView: View {
                     monthlyBudget: activeBudget.value,
                     monthYear: formatMonthYear(from: activeBudget.date)
                 )
-                .padding(.top, -50)
+                .padding(.top)
             } else {
                 Text("No active budget selected")
                     .foregroundColor(.indigo)
                     .font(.title3)
                     .padding(.top, 10)
             }
-
+            Spacer()
             // Dashboard buttons
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
                 DashboardIconButton(title: "Personal Budget", icon: "hands.sparkles.fill", color: .yellow) {
@@ -78,7 +78,7 @@ struct DashboardView: View {
                 DashboardIconButton(title: "Monthly Reports", icon: "chart.bar.fill", color: .purple) {
                     navigateToReports = true
                 }
-            }.padding(.bottom, 150)
+            }.padding(.bottom)
 
             Spacer()
 
@@ -106,6 +106,8 @@ struct DashboardView: View {
             NavigationLink(destination: JoinGroupBudgetView(userId: authVM.user?.id ?? ""), isActive: $navigateToJoinGroup) { EmptyView() }
 
         }
+        .refreshable {
+            refreshDashboard()}
         .onAppear {
             // Fetch the active budget when the view appears
             if let userId = authVM.user?.id {
@@ -121,7 +123,12 @@ struct DashboardView: View {
         .navigationBarBackButtonHidden(true)
     }
 
-    // Helper function to format the month and year from the budget date
+    private func refreshDashboard() {
+            if let userId = authVM.user?.id {
+                budgetViewModel.fetchBudgets(for: userId)
+            }
+        }
+
     private func formatMonthYear(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"

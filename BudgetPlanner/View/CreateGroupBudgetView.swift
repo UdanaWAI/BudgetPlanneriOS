@@ -22,11 +22,10 @@ struct CreateGroupBudgetView: View {
             VStack(spacing: 20) {
                 CustomBackButton(title: "Create Group Budget", foregroundColor: .indigo)
 
-                Image(systemName: "person.3.fill")
-                    .resizable()
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.orange)
-                    .padding()
+                Image("9846833 1")
+                     .resizable()
+                     .scaledToFit()
+                     .frame(width: 300, height: 300)
 
                 TextFieldComponent(title: "Budget Name", text: $name)
                 TextFieldComponent(title: "Caption", text: $caption)
