@@ -13,7 +13,7 @@ class GroupBudgetViewModel: ObservableObject {
         fetchGroupBudgets()
     }
 
-    // MARK: - Fetch Group Budgets Owned or Joined by User
+    // Fetch group budgets by User
     func fetchGroupBudgets() {
         db.collectionGroup("groupBudgets")
             .whereField("members", arrayContains: userId)
@@ -26,7 +26,7 @@ class GroupBudgetViewModel: ObservableObject {
             }
     }
 
-    // MARK: - Add a New Group Budget
+    // Add a Group Budget
     func addGroupBudget(_ budget: GroupBudgetModel) {
         var newBudget = budget
         let docRef = db.collection("users").document(userId).collection("groupBudgets").document()
@@ -42,7 +42,7 @@ class GroupBudgetViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Update Group Budget
+    //Update Group Budget
     func updateGroupBudget(_ budget: GroupBudgetModel) {
         let docRef = db.collection("users").document(budget.userId).collection("groupBudgets").document(budget.id)
 
@@ -55,7 +55,7 @@ class GroupBudgetViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Delete Group Budget
+    //Delete Group Budget
     func deleteGroupBudget(_ budget: GroupBudgetModel) {
         let docRef = db.collection("users").document(budget.userId).collection("groupBudgets").document(budget.id)
 
@@ -68,7 +68,7 @@ class GroupBudgetViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Join a Group Budget via Join Code
+    //Join a group Budget with Join Code
     func joinGroupBudget(withJoinCode code: String, completion: @escaping (Result<Void, Error>) -> Void) {
         db.collectionGroup("groupBudgets")
             .whereField("joinCode", isEqualTo: code)

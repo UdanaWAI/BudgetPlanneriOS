@@ -11,7 +11,6 @@ struct DashboardView: View {
     @State private var navigateToGroupBudgetList = false
     @State private var navigateToJoinGroup = false
 
-    // Variable to hold the active budget
     @State private var activeBudget: BudgetModel?
 
     var body: some View {
@@ -22,7 +21,6 @@ struct DashboardView: View {
                     .frame(height: 130)
                     .edgesIgnoringSafeArea(.top)
                     .padding(.top,-22)
-                // welcome and log out
                 HStack {
                     if let user = authVM.user {
                         Text("Welcome, \(user.username)")
