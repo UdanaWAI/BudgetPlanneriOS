@@ -22,77 +22,104 @@ struct AddExpensesView: View {
 
     var body: some View {
         NavigationView {
-            VStack {
-                Form {
-                    if preselectedBudget == nil {
-                        Section(header: Text("Choose a Budget")) {
-                            Picker("Budget", selection: $selectedBudget) {
+            VStack(spacing: 24) {
+                Spacer()
+                Button(action: {
+                    showReceiptScanner = true
+                }) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "doc.text.viewfinder")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 60, height: 60)
+                            .foregroundColor(Color.indigo)
+                    }
+                    .padding(10)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+                }
+
+                Spacer()
+                
+                if preselectedBudget == nil {
+                    
+                    Section(header: Text("Add an Expense")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.indigo)
+                    ) {
+                        HStack {
+                            Text(selectedBudget?.name ?? "Select a budget")
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            Picker("", selection: $selectedBudget) {
                                 ForEach(budgetViewModel.budgets, id: \.id) { budget in
                                     Text(budget.name).tag(Optional(budget))
                                 }
                             }
                             .pickerStyle(MenuPickerStyle())
+                            .labelsHidden()
+                            .accentColor(.indigo)
                         }
-                    } else {
-                        Section(header: Text("Budget")) {
-                            Text(preselectedBudget?.name ?? "")
+                        .padding()
+                        .background(Color.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                        )
+                    }
+                } else {
+                    Section(header: Text("Budget")
+                                .font(.caption)
                                 .foregroundColor(.gray)
-                        }
-                    }
-
-                    Section(header: Text("Expense Info")) {
-                        TextField("Title", text: $name)
-                        TextField("Amount", text: $amount)
-                            .keyboardType(.decimalPad)
-                        DatePicker("Date", selection: $date, displayedComponents: .date)
-                    }
-
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                    }
-
-                    Button(action: addExpense) {
-                        Text("Add Expense")
-                            .frame(maxWidth: .infinity)
+                    ) {
+                        Text(preselectedBudget?.name ?? "")
+                            .foregroundColor(.gray)
                             .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    .disabled(selectedBudget == nil && preselectedBudget == nil)
-
-                    Button(action: {
-                        showReceiptScanner = true
-                    }) {
-                        Text("Scan Receipt")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                }
-                .sheet(isPresented: $showReceiptScanner) {
-                    ReceiptScanner(scannedText: $scannedText, totalAmount: $amount)
-                }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        CustomCancelButton(title: "Add an Expense", foregroundColor: .blue) {
-                            presentationMode.wrappedValue.dismiss()
-                        }
+                            .background(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            )
                     }
                 }
 
+
+                VStack(spacing: 15) {
+                    TextBox(text: $name, placeholder: "Enter Expense Title", lable: "Title")
+                    TextBox(text: $amount, placeholder: "Enter Amount", lable: "Amount")
+                        .keyboardType(.decimalPad)
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 20).stroke(Color.gray, lineWidth: 1))
+                }
+                
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .padding(.top, 5)
+                }
+                
+                PrimaryButton(title: "Add Expense") {
+                    addExpense()
+                }
+                .disabled(selectedBudget == nil && preselectedBudget == nil)
+
+                
+                
                 Spacer()
-
-                // MARK: - Tab Bar
+                Spacer()
+                // Tab Bar
                 SimpleTabBar { selectedTab in
                     switch selectedTab {
                     case .dashboard:
                         presentationMode.wrappedValue.dismiss()
                     case .personal:
-                           navigateToBudgetList = true
+                        navigateToBudgetList = true
                     case .expenses:
                         break // already here
                     case .reports:
@@ -106,30 +133,29 @@ struct AddExpensesView: View {
                     }
                 }
                 .padding(.bottom, 4)
+            }.padding(.horizontal, 10)
+            .background(
+                NavigationLink(destination: ReportView(userId: selectedBudget?.userId ?? "", navigateBackToDashboard: .constant(false)), isActive: $navigateToReports) {
+                    EmptyView()
+                }
+            )
+            .background(
+                NavigationLink(destination: GroupBudgetListView(viewModel: GroupBudgetViewModel(userId: selectedBudget?.userId ?? ""), navigateBackToDashboard: .constant(false)), isActive: $navigateToGroupBudgetList) {
+                    EmptyView()
+                }
+            )
+            .background(
+                NavigationLink(destination: BudgetListView(navigateBackToDashboard: $navigateToBudgetList), isActive: $navigateToBudgetList) {
+                    EmptyView()
+                }
+            )
+            .navigationBarBackButtonHidden(true)
+            .onAppear {
+                if let preselected = preselectedBudget {
+                    selectedBudget = preselected
+                }
             }
         }
-        .navigationBarBackButtonHidden(true)
-        .onAppear {
-            if let preselected = preselectedBudget {
-                selectedBudget = preselected
-            }
-        }
-        .background(
-            NavigationLink(destination: ReportView(userId: selectedBudget?.userId ?? "", navigateBackToDashboard: .constant(false)), isActive: $navigateToReports) {
-                EmptyView()
-            }
-        )
-        .background(
-            NavigationLink(destination: GroupBudgetListView(viewModel: GroupBudgetViewModel(userId: selectedBudget?.userId ?? ""), navigateBackToDashboard: .constant(false)), isActive: $navigateToGroupBudgetList) {
-                EmptyView()
-            }
-        )
-        .background(
-            NavigationLink(destination: BudgetListView(navigateBackToDashboard: $navigateToBudgetList), isActive: $navigateToBudgetList) {
-                EmptyView()
-            }
-
-        )
     }
 
     func addExpense() {
